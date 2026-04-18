@@ -9,9 +9,9 @@ export const translations = {
     preferencesUsageTypes: ['Working', 'Studying', 'Relax', 'Research', 'Writing', 'Other'],
     preferencesAlertSensitivity: 'Alert sensitivity',
     preferencesAlertSensitivities: [
-      { label: 'Low', value: 60 },
-      { label: 'Medium', value: 30 },
-      { label: 'High', value: 10 },
+      { label: 'Low', value: 1 },
+      { label: 'Medium', value: 2 },
+      { label: 'High', value: 3 },
     ],
     preferencesSave: 'Save Preferences',
     preferencesDarkMode: 'Dark mode',

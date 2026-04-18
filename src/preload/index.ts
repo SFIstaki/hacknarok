@@ -1,8 +1,19 @@
 import { contextBridge } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import { ipcRenderer } from 'electron';
+
+interface PreferencesPayload {
+  username: string;
+  userType: string;
+  usageTypes: string[];
+  alertSensitivity: number;
+}
 
 // Custom APIs for renderer
-const api = {};
+const api = {
+  savePreferences: (payload: PreferencesPayload): Promise<{ success: boolean; filePath: string }> =>
+    ipcRenderer.invoke('preferences:save', payload),
+};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
