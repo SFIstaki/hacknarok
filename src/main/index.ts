@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, Notification } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
@@ -49,8 +49,20 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  // IPC test
   ipcMain.on('ping', () => console.log('pong'));
+
+  ipcMain.on('focus-alert', (_, { state, duration }: { state: string; duration: number }) => {
+    if (Notification.isSupported()) {
+      const messages: Record<string, string> = {
+        fading: `You've been drifting for ${duration}s — time to refocus.`,
+        gone: `Focus lost for ${duration}s. Come back when you're ready!`,
+      };
+      new Notification({
+        title: 'Presently — Focus Alert',
+        body: messages[state] ?? 'Your focus needs attention.',
+      }).show();
+    }
+  });
 
   createWindow();
 

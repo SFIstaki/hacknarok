@@ -1,14 +1,13 @@
-import type { Lang, T } from '../i18n';
+import type { T } from '../i18n';
 import '../assets/main.css';
 import '../assets/settings.css';
 import React from 'react';
 
 interface SettingsProps {
-  onLangToggle: () => void;
   t: T;
 }
 
-export default function Settings({ onLangToggle, t }: SettingsProps): React.JSX.Element {
+export default function Settings({ t }: SettingsProps): React.JSX.Element {
   const [mode, setMode] = React.useState<'relaks' | 'focus'>('focus');
   const [showModeInfo, setShowModeInfo] = React.useState(false);
   return (
