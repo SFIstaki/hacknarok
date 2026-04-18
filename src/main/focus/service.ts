@@ -12,6 +12,7 @@ import { FocusDatabase } from './database'
 import { buildDayReportFromEvents } from './analytics'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const DEFAULT_RETENTION_DAYS = 60
 
 export class FocusService {
   private readonly db: FocusDatabase
@@ -26,6 +27,7 @@ export class FocusService {
     this.db = new FocusDatabase(dbPath)
 
     this.registerIpc()
+    this.cleanupOldData(DEFAULT_RETENTION_DAYS)
     this.scheduleDailySnapshot()
   }
 
@@ -73,12 +75,19 @@ export class FocusService {
     const nowTs = Date.now()
     const dayStartTs = startOfLocalDay(nowTs)
     const snapshot = this.db.getDailyReport(dayStartTs)
+    const latestSnapshot = this.db.getLatestDailyReportMeta()
 
     return {
       nowTs,
       currentState: this.currentState,
       currentAppName: this.currentAppName,
       currentWindowTitle: this.currentWindowTitle,
+      reportStatus: {
+        hasTodaySnapshot: snapshot !== null,
+        latestSnapshotGeneratedAtTs: latestSnapshot?.generatedAtTs ?? null,
+        latestSnapshotDayStartTs: latestSnapshot?.dayStartTs ?? null,
+        latestSnapshotDayEndTs: latestSnapshot?.dayEndTs ?? null
+      },
       timeline: snapshot?.timeline ?? [],
       stats: snapshot?.stats ?? { lockedMs: 0, fadingMs: 0, goneMs: 0, totalMs: 0 },
       delta: snapshot?.delta ?? { todayLockedMs: 0, yesterdayLockedMs: 0, percentChange: null },
@@ -96,6 +105,7 @@ export class FocusService {
 
     const report = buildDayReportFromEvents(eventsForDay, eventsForYesterday, normalizedStart, dayEndTs)
     this.db.upsertDailyReport(report)
+    this.cleanupOldData(DEFAULT_RETENTION_DAYS)
     this.broadcastDashboardUpdate()
 
     return report
@@ -119,6 +129,12 @@ export class FocusService {
       this.generateReportSnapshot(dayToFinalize)
       this.scheduleDailySnapshot()
     }, delayMs)
+  }
+
+  private cleanupOldData(retentionDays: number): void {
+    const normalizedRetentionDays = Math.max(1, retentionDays)
+    const cutoffTs = startOfLocalDay(Date.now()) - normalizedRetentionDays * ONE_DAY_MS
+    this.db.deleteDataOlderThan(cutoffTs)
   }
 
   shutdown(): void {

@@ -27,6 +27,12 @@ export interface ReportsTodayResponse {
   currentState: FocusState
   currentAppName: string | null
   currentWindowTitle: string | null
+  reportStatus: {
+    hasTodaySnapshot: boolean
+    latestSnapshotGeneratedAtTs: number | null
+    latestSnapshotDayStartTs: number | null
+    latestSnapshotDayEndTs: number | null
+  }
   timeline: TimelinePoint[]
   stats: FocusDurations
   delta: {

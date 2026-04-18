@@ -19,6 +19,12 @@ interface DailyReportRow {
   topAppsJson: string
 }
 
+interface DailyReportMetaRow {
+  generatedAtTs: number
+  dayStartTs: number
+  dayEndTs: number
+}
+
 export class FocusDatabase {
   private readonly db: Database.Database
 
@@ -178,6 +184,36 @@ export class FocusDatabase {
       yesterdayStats: JSON.parse(row.yesterdayStatsJson),
       delta: JSON.parse(row.deltaJson),
       topApps: JSON.parse(row.topAppsJson)
+    }
+  }
+
+  getLatestDailyReportMeta(): DailyReportMetaRow | null {
+    const statement = this.db.prepare(`
+      SELECT
+        generated_at_ts as generatedAtTs,
+        day_start_ts as dayStartTs,
+        day_end_ts as dayEndTs
+      FROM daily_reports
+      ORDER BY day_start_ts DESC
+      LIMIT 1
+    `)
+
+    const row = statement.get() as DailyReportMetaRow | undefined
+    return row ?? null
+  }
+
+  deleteDataOlderThan(cutoffTs: number): { deletedEvents: number; deletedReports: number } {
+    const deleteEventsStatement = this.db.prepare(`DELETE FROM focus_events WHERE ts < @cutoffTs`)
+    const deleteReportsStatement = this.db.prepare(
+      `DELETE FROM daily_reports WHERE day_end_ts <= @cutoffTs`
+    )
+
+    const deletedEvents = deleteEventsStatement.run({ cutoffTs }).changes
+    const deletedReports = deleteReportsStatement.run({ cutoffTs }).changes
+
+    return {
+      deletedEvents,
+      deletedReports
     }
   }
 }

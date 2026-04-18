@@ -39,11 +39,19 @@ export interface DeltaLocked {
   percentChange: number | null
 }
 
+export interface ReportStatus {
+  hasTodaySnapshot: boolean
+  latestSnapshotGeneratedAtTs: number | null
+  latestSnapshotDayStartTs: number | null
+  latestSnapshotDayEndTs: number | null
+}
+
 export interface ReportsTodayResponse {
   nowTs: number
   currentState: FocusState
   currentAppName: string | null
   currentWindowTitle: string | null
+  reportStatus: ReportStatus
   timeline: TimelinePoint[]
   stats: FocusDurations
   delta: DeltaLocked
