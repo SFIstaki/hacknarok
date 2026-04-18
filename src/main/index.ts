@@ -7,7 +7,6 @@ import { FocusService } from './focus/service'
 import { FocusMonitor } from './focus/monitor'
 
 let focusService: FocusService | null = null
-<<<<<<< HEAD
 interface PreferencesPayload {
   username: string;
   userType: string;
@@ -35,9 +34,7 @@ function isValidPreferencesPayload(payload: unknown): payload is PreferencesPayl
 function sanitizeFileName(name: string): string {
   return name.trim().replace(/[^a-zA-Z0-9._-]/g, '_');
 }
-=======
 let focusMonitor: FocusMonitor | null = null
->>>>>>> 94d132d (fixBack)
 
 function createWindow(): void {
   // Create the browser window.

@@ -7,6 +7,8 @@ export const translations = {
     preferencesUserTypes: ['Student', 'Professional', 'Freelancer', 'Other'],
     preferencesUsageType: 'How do you plan on using the app?',
     preferencesUsageTypes: ['Working', 'Studying', 'Relax', 'Research', 'Writing', 'Other'],
+    preferencesUserTypeError: 'Please select a user type',
+    preferencesUsageTypeError: 'Please select at least one usage type',
     preferencesAlertSensitivity: 'Alert sensitivity',
     preferencesAlertSensitivities: [
       { label: 'Low', value: 1 },
@@ -68,6 +70,8 @@ export const translations = {
     preferencesUserTypes: ['Uczeń', 'Profesjonalista', 'Freelancer', 'Inne'],
     preferencesUsageType: 'Jak planujesz używać aplikacji?',
     preferencesUsageTypes: ['Praca', 'Nauka', 'Relaks', 'Badania', 'Pisanie', 'Inne'],
+    preferencesUserTypeError: 'Wybierz typ użytkownika',
+    preferencesUsageTypeError: 'Wybierz co najmniej jeden sposób użycia',
     preferencesAlertSensitivity: 'Czułość alertów',
     preferencesAlertSensitivities: [
       { label: 'Niska', value: 60 },

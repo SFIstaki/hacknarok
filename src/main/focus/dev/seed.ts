@@ -16,7 +16,7 @@ interface SegmentSpec {
 }
 
 const DEFAULT_DB_PATH = resolve(process.cwd(), 'tmp/focus-monitor.seed.db')
-type SeedScenario = 'baseline' | 'set2' | 'set3' | 'absurd'
+type SeedScenario = 'baseline' | 'set2' | 'set3' | 'absurd' | 'volatile'
 
 function parseDbPath(): string {
   const dbArg = process.argv.find((arg) => arg.startsWith('--db='))
@@ -33,6 +33,10 @@ function parseScenario(): SeedScenario {
 
   if (scenario === 'absurd') {
     return 'absurd'
+  }
+
+  if (scenario === 'volatile') {
+    return 'volatile'
   }
 
   if (scenario === 'set3') {
@@ -376,6 +380,54 @@ function buildSet3DaySegments(profile: 'yesterday' | 'today'): SegmentSpec[] {
   ]
 }
 
+function buildVolatileDaySegments(profile: 'yesterday' | 'today'): SegmentSpec[] {
+  if (profile === 'yesterday') {
+    return [
+      { startHour: 7, startMinute: 30, endHour: 8, endMinute: 0, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - sprint start' },
+      { startHour: 8, startMinute: 0, endHour: 8, endMinute: 25, state: 'gone', appName: null, windowTitle: null },
+      { startHour: 8, startMinute: 25, endHour: 8, endMinute: 50, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - tab storm' },
+      { startHour: 8, startMinute: 50, endHour: 9, endMinute: 35, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - coding burst' },
+      { startHour: 9, startMinute: 35, endHour: 10, endMinute: 10, state: 'gone', appName: null, windowTitle: null },
+      { startHour: 10, startMinute: 10, endHour: 10, endMinute: 40, state: 'locked', appName: 'Terminal', windowTitle: 'volatile - tests' },
+      { startHour: 10, startMinute: 40, endHour: 11, endMinute: 5, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - context switch' },
+      { startHour: 11, startMinute: 5, endHour: 11, endMinute: 55, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - deep block' },
+      { startHour: 11, startMinute: 55, endHour: 12, endMinute: 25, state: 'gone', appName: null, windowTitle: null },
+      { startHour: 12, startMinute: 25, endHour: 12, endMinute: 50, state: 'fading', appName: 'Slack', windowTitle: 'volatile - message blast' },
+      { startHour: 12, startMinute: 50, endHour: 13, endMinute: 35, state: 'locked', appName: 'Notion', windowTitle: 'volatile - planning spike' },
+      { startHour: 13, startMinute: 35, endHour: 14, endMinute: 5, state: 'gone', appName: null, windowTitle: null },
+      { startHour: 14, startMinute: 5, endHour: 14, endMinute: 45, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - patch wave' },
+      { startHour: 14, startMinute: 45, endHour: 15, endMinute: 5, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - review loop' },
+      { startHour: 15, startMinute: 5, endHour: 15, endMinute: 45, state: 'locked', appName: 'Terminal', windowTitle: 'volatile - build cycle' },
+      { startHour: 15, startMinute: 45, endHour: 16, endMinute: 30, state: 'gone', appName: null, windowTitle: null },
+      { startHour: 16, startMinute: 30, endHour: 17, endMinute: 10, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - comeback burst' },
+      { startHour: 17, startMinute: 10, endHour: 18, endMinute: 0, state: 'gone', appName: null, windowTitle: null }
+    ]
+  }
+
+  return [
+    { startHour: 7, startMinute: 0, endHour: 7, endMinute: 20, state: 'gone', appName: null, windowTitle: null },
+    { startHour: 7, startMinute: 20, endHour: 8, endMinute: 0, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - warmup' },
+    { startHour: 8, startMinute: 0, endHour: 8, endMinute: 20, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - social drift' },
+    { startHour: 8, startMinute: 20, endHour: 9, endMinute: 5, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - coding burst' },
+    { startHour: 9, startMinute: 5, endHour: 9, endMinute: 30, state: 'gone', appName: null, windowTitle: null },
+    { startHour: 9, startMinute: 30, endHour: 10, endMinute: 5, state: 'locked', appName: 'Terminal', windowTitle: 'volatile - cli sprint' },
+    { startHour: 10, startMinute: 5, endHour: 10, endMinute: 30, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - docs bounce' },
+    { startHour: 10, startMinute: 30, endHour: 11, endMinute: 15, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - feature push' },
+    { startHour: 11, startMinute: 15, endHour: 11, endMinute: 50, state: 'gone', appName: null, windowTitle: null },
+    { startHour: 11, startMinute: 50, endHour: 12, endMinute: 20, state: 'fading', appName: 'Slack', windowTitle: 'volatile - interruptions' },
+    { startHour: 12, startMinute: 20, endHour: 13, endMinute: 5, state: 'locked', appName: 'Notion', windowTitle: 'volatile - focused planning' },
+    { startHour: 13, startMinute: 5, endHour: 13, endMinute: 25, state: 'gone', appName: null, windowTitle: null },
+    { startHour: 13, startMinute: 25, endHour: 14, endMinute: 10, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - hotfix run' },
+    { startHour: 14, startMinute: 10, endHour: 14, endMinute: 40, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - rabbit hole' },
+    { startHour: 14, startMinute: 40, endHour: 15, endMinute: 15, state: 'locked', appName: 'Terminal', windowTitle: 'volatile - tests + build' },
+    { startHour: 15, startMinute: 15, endHour: 15, endMinute: 55, state: 'gone', appName: null, windowTitle: null },
+    { startHour: 15, startMinute: 55, endHour: 16, endMinute: 35, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - recovery focus' },
+    { startHour: 16, startMinute: 35, endHour: 17, endMinute: 5, state: 'fading', appName: 'Google Chrome', windowTitle: 'volatile - multitask drift' },
+    { startHour: 17, startMinute: 5, endHour: 17, endMinute: 45, state: 'locked', appName: 'Visual Studio Code', windowTitle: 'volatile - final burst' },
+    { startHour: 17, startMinute: 45, endHour: 18, endMinute: 30, state: 'gone', appName: null, windowTitle: null }
+  ]
+}
+
 function buildDaySegments(scenario: SeedScenario, profile: 'yesterday' | 'today'): SegmentSpec[] {
   if (scenario === 'set2') {
     return buildSet2DaySegments(profile)
@@ -387,6 +439,10 @@ function buildDaySegments(scenario: SeedScenario, profile: 'yesterday' | 'today'
 
   if (scenario === 'absurd') {
     return buildAbsurdDaySegments(profile)
+  }
+
+  if (scenario === 'volatile') {
+    return buildVolatileDaySegments(profile)
   }
 
   return buildBaselineDaySegments(profile)
