@@ -1,15 +1,22 @@
 import Database from 'better-sqlite3'
-import type { FocusSegment, FocusState, TimelinePoint, TopAppItem } from './types'
-import { FIVE_MINUTES_MS } from './time'
+import type { FocusEvent, FocusState, ReportsGenerateResponse } from './types'
 
-interface DurationRow {
+interface FocusEventRow {
+  ts: number
   state: FocusState
-  durationMs: number
+  appName: string | null
+  windowTitle: string | null
 }
 
-interface TopAppRow {
-  appName: string
-  durationMs: number
+interface DailyReportRow {
+  generatedAtTs: number
+  dayStartTs: number
+  dayEndTs: number
+  timelineJson: string
+  statsJson: string
+  yesterdayStatsJson: string
+  deltaJson: string
+  topAppsJson: string
 }
 
 export class FocusDatabase {
@@ -32,25 +39,31 @@ export class FocusDatabase {
         window_title TEXT
       );
 
-      CREATE TABLE IF NOT EXISTS focus_segments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        start_ts INTEGER NOT NULL,
-        end_ts INTEGER NOT NULL,
-        duration_ms INTEGER NOT NULL,
-        state TEXT NOT NULL,
-        app_name TEXT,
-        window_title TEXT
+      CREATE TABLE IF NOT EXISTS daily_reports (
+        day_start_ts INTEGER PRIMARY KEY,
+        generated_at_ts INTEGER NOT NULL,
+        day_end_ts INTEGER NOT NULL,
+        timeline_json TEXT NOT NULL,
+        stats_json TEXT NOT NULL,
+        yesterday_stats_json TEXT NOT NULL,
+        delta_json TEXT NOT NULL,
+        top_apps_json TEXT NOT NULL
       );
 
       CREATE INDEX IF NOT EXISTS idx_focus_events_ts ON focus_events(ts);
-      CREATE INDEX IF NOT EXISTS idx_focus_segments_start ON focus_segments(start_ts);
-      CREATE INDEX IF NOT EXISTS idx_focus_segments_end ON focus_segments(end_ts);
-      CREATE INDEX IF NOT EXISTS idx_focus_segments_state ON focus_segments(state);
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_day_start ON daily_reports(day_start_ts);
     `)
   }
 
   close(): void {
     this.db.close()
+  }
+
+  clearAll(): void {
+    this.db.exec(`
+      DELETE FROM focus_events;
+      DELETE FROM daily_reports;
+    `)
   }
 
   insertEvent(ts: number, state: FocusState, appName: string | null, windowTitle: string | null): void {
@@ -61,91 +74,110 @@ export class FocusDatabase {
     statement.run({ ts, state, appName, windowTitle })
   }
 
-  insertSegment(segment: FocusSegment): void {
+  getEventsForRange(rangeStart: number, rangeEnd: number): FocusEvent[] {
     const statement = this.db.prepare(`
-      INSERT INTO focus_segments (start_ts, end_ts, duration_ms, state, app_name, window_title)
-      VALUES (@startTs, @endTs, @durationMs, @state, @appName, @windowTitle)
+      SELECT ts, state, app_name as appName, window_title as windowTitle
+      FROM focus_events
+      WHERE ts >= @rangeStart AND ts < @rangeEnd
+      ORDER BY ts ASC
     `)
 
-    statement.run(segment)
-  }
+    const previousStatement = this.db.prepare(`
+      SELECT ts, state, app_name as appName, window_title as windowTitle
+      FROM focus_events
+      WHERE ts < @rangeStart
+      ORDER BY ts DESC
+      LIMIT 1
+    `)
 
-  getSegmentsOverlapping(rangeStart: number, rangeEnd: number): FocusSegment[] {
-    const statement = this.db.prepare(
-      `
-      SELECT start_ts as startTs, end_ts as endTs, duration_ms as durationMs, state, app_name as appName, window_title as windowTitle
-      FROM focus_segments
-      WHERE end_ts > @rangeStart AND start_ts < @rangeEnd
-      ORDER BY start_ts ASC
-    `
-    )
+    const inRange = statement.all({ rangeStart, rangeEnd }) as FocusEventRow[]
+    const previous = previousStatement.get({ rangeStart }) as FocusEventRow | undefined
 
-    return statement.all({ rangeStart, rangeEnd }) as FocusSegment[]
-  }
-
-  getDurations(rangeStart: number, rangeEnd: number): Record<FocusState, number> {
-    const statement = this.db.prepare(
-      `
-      SELECT state, SUM(MAX(0, MIN(end_ts, @rangeEnd) - MAX(start_ts, @rangeStart))) as durationMs
-      FROM focus_segments
-      WHERE end_ts > @rangeStart AND start_ts < @rangeEnd
-      GROUP BY state
-    `
-    )
-
-    const rows = statement.all({ rangeStart, rangeEnd }) as DurationRow[]
-    const output: Record<FocusState, number> = {
-      locked: 0,
-      fading: 0,
-      gone: 0
+    if (!previous) {
+      return inRange
     }
 
-    for (const row of rows) {
-      output[row.state] = row.durationMs ?? 0
-    }
-
-    return output
+    return [previous, ...inRange]
   }
 
-  getTopAppsLocked(rangeStart: number, rangeEnd: number, limit = 3): TopAppItem[] {
+  upsertDailyReport(report: ReportsGenerateResponse): void {
     const statement = this.db.prepare(
       `
-      SELECT
-        COALESCE(NULLIF(app_name, ''), 'Unknown') as appName,
-        SUM(MAX(0, MIN(end_ts, @rangeEnd) - MAX(start_ts, @rangeStart))) as durationMs
-      FROM focus_segments
-      WHERE state = 'locked' AND end_ts > @rangeStart AND start_ts < @rangeEnd
-      GROUP BY appName
-      ORDER BY durationMs DESC
-      LIMIT @limit
-    `
-    )
-
-    return statement.all({ rangeStart, rangeEnd, limit }) as TopAppRow[]
-  }
-
-  getTimeline(rangeStart: number, rangeEnd: number, bucketMs = FIVE_MINUTES_MS): TimelinePoint[] {
-    const statement = this.db.prepare(
-      `
-      WITH RECURSIVE buckets(ts) AS (
-        VALUES (@rangeStart)
-        UNION ALL
-        SELECT ts + @bucketMs FROM buckets WHERE ts + @bucketMs < @rangeEnd
+      INSERT INTO daily_reports (
+        day_start_ts,
+        generated_at_ts,
+        day_end_ts,
+        timeline_json,
+        stats_json,
+        yesterday_stats_json,
+        delta_json,
+        top_apps_json
+      ) VALUES (
+        @dayStartTs,
+        @generatedAtTs,
+        @dayEndTs,
+        @timelineJson,
+        @statsJson,
+        @yesterdayStatsJson,
+        @deltaJson,
+        @topAppsJson
       )
-      SELECT
-        b.ts as bucketStart,
-        COALESCE((
-          SELECT s.state
-          FROM focus_segments s
-          WHERE s.start_ts <= b.ts AND s.end_ts > b.ts
-          ORDER BY s.start_ts DESC
-          LIMIT 1
-        ), 'gone') as state
-      FROM buckets b
-      ORDER BY b.ts ASC
+      ON CONFLICT(day_start_ts) DO UPDATE SET
+        generated_at_ts = excluded.generated_at_ts,
+        day_end_ts = excluded.day_end_ts,
+        timeline_json = excluded.timeline_json,
+        stats_json = excluded.stats_json,
+        yesterday_stats_json = excluded.yesterday_stats_json,
+        delta_json = excluded.delta_json,
+        top_apps_json = excluded.top_apps_json
     `
     )
 
-    return statement.all({ rangeStart, rangeEnd, bucketMs }) as TimelinePoint[]
+    statement.run({
+      dayStartTs: report.dayStartTs,
+      generatedAtTs: report.generatedAtTs,
+      dayEndTs: report.dayEndTs,
+      timelineJson: JSON.stringify(report.timeline),
+      statsJson: JSON.stringify(report.stats),
+      yesterdayStatsJson: JSON.stringify(report.yesterdayStats),
+      deltaJson: JSON.stringify(report.delta),
+      topAppsJson: JSON.stringify(report.topApps)
+    })
+  }
+
+  getDailyReport(dayStartTs: number): ReportsGenerateResponse | null {
+    const statement = this.db.prepare(
+      `
+      SELECT
+        generated_at_ts as generatedAtTs,
+        day_start_ts as dayStartTs,
+        day_end_ts as dayEndTs,
+        timeline_json as timelineJson,
+        stats_json as statsJson,
+        yesterday_stats_json as yesterdayStatsJson,
+        delta_json as deltaJson,
+        top_apps_json as topAppsJson
+      FROM daily_reports
+      WHERE day_start_ts = @dayStartTs
+      LIMIT 1
+    `
+    )
+
+    const row = statement.get({ dayStartTs }) as DailyReportRow | undefined
+
+    if (!row) {
+      return null
+    }
+
+    return {
+      generatedAtTs: row.generatedAtTs,
+      dayStartTs: row.dayStartTs,
+      dayEndTs: row.dayEndTs,
+      timeline: JSON.parse(row.timelineJson),
+      stats: JSON.parse(row.statsJson),
+      yesterdayStats: JSON.parse(row.yesterdayStatsJson),
+      delta: JSON.parse(row.deltaJson),
+      topApps: JSON.parse(row.topAppsJson)
+    }
   }
 }

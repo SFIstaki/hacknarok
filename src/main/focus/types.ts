@@ -16,15 +16,6 @@ export interface FocusEvent {
   ts: number
 }
 
-export interface FocusSegment {
-  state: FocusState
-  appName: string | null
-  windowTitle: string | null
-  startTs: number
-  endTs: number
-  durationMs: number
-}
-
 export interface TimelinePoint {
   bucketStart: number
   state: FocusState

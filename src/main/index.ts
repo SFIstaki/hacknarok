@@ -3,8 +3,10 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { FocusService } from './focus/service'
+import { FocusMonitor } from './focus/monitor'
 
 let focusService: FocusService | null = null
+let focusMonitor: FocusMonitor | null = null
 
 function createWindow(): void {
   // Create the browser window.
@@ -57,6 +59,13 @@ app.whenReady().then(() => {
 
   const dbPath = join(app.getPath('userData'), 'focus-monitor.db')
   focusService = new FocusService(dbPath)
+  focusMonitor = new FocusMonitor({
+    sampleIntervalMs: 5000,
+    onClassifiedState: (event) => {
+      focusService?.ingest(event)
+    }
+  })
+  focusMonitor.start()
 
   createWindow();
 
@@ -77,6 +86,9 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  focusMonitor?.stop()
+  focusMonitor = null
+
   focusService?.shutdown()
   focusService = null
 })
