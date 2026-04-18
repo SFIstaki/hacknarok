@@ -5,6 +5,7 @@ import '../assets/preferences.css';
 import type { T } from '../i18n';
 
 interface PreferencesFormProps {
+  username: string;
   onSubmit?: () => void;
   t?: T;
   theme?: 'light' | 'dark';
@@ -13,8 +14,56 @@ interface PreferencesFormProps {
   onLangToggle?: () => void;
 }
 
+interface PreferencesPayload {
+  username: string;
+  userType: string;
+  usageTypes: string[];
+  alertSensitivity: number;
+}
+
+async function uploadPreferencesToSupabase(payload: PreferencesPayload): Promise<void> {
+  const supabaseUrl =
+    import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const bucketName = 'settings';
+
+  if (!supabaseAnonKey) {
+    throw new Error('Missing VITE_SUPABASE_ANON_KEY');
+  }
+
+  const safeUsername = payload.username.trim().replace(/[^a-zA-Z0-9._-]/g, '_') || 'preferences';
+  const fileName = `${safeUsername}.json`;
+  const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${encodeURIComponent(fileName)}`;
+
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+      'x-upsert': 'true',
+    },
+    body: JSON.stringify(payload, null, 2),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Supabase upload failed (${response.status}): ${errorText}`);
+  }
+}
+
+async function savePreferences(payload: PreferencesPayload): Promise<void> {
+  await uploadPreferencesToSupabase(payload);
+}
+
 // Reusable Language Toggle
-const LangToggle = ({ lang, onLangToggle }: { lang: 'en' | 'pl'; onLangToggle?: () => void }) => (
+const LangToggle = ({
+  lang,
+  onLangToggle,
+}: {
+  lang: 'en' | 'pl';
+  onLangToggle?: () => void;
+}): React.JSX.Element => (
   <button type="button" className="lang-toggle" onClick={onLangToggle}>
     <span className={lang === 'en' ? 'lang-active' : ''}>EN</span>
     <span className="lang-sep">/</span>
@@ -29,7 +78,7 @@ const ThemeToggle = ({
 }: {
   theme: 'light' | 'dark';
   onThemeToggle?: () => void;
-}) => (
+}): React.JSX.Element => (
   <button
     type="button"
     className="theme-toggle"
@@ -75,18 +124,25 @@ const ThemeToggle = ({
 );
 
 export default function PreferencesForm({
+  username,
   onSubmit,
   t,
   theme = 'light',
   onThemeToggle,
   lang = 'en',
   onLangToggle,
-}: PreferencesFormProps) {
+}: PreferencesFormProps): React.JSX.Element {
   const tt = t || ({} as T);
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [selectedUsageTypes, setSelectedUsageTypes] = useState<string[]>([]);
   const [alertSensitivity, setAlertSensitivity] = useState<number>(30);
-  const [errors, setErrors] = useState<{ userType?: string; usageTypes?: string }>({});
+  const [errors, setErrors] = useState<{
+    username?: string;
+    userType?: string;
+    usageTypes?: string;
+  }>({});
+  const [submitError, setSubmitError] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const userTypes = tt.preferencesUserTypes || ['Student', 'Professional', 'Freelancer', 'Other'];
   const usageTypes = tt.preferencesUsageTypes || [
@@ -103,34 +159,46 @@ export default function PreferencesForm({
     { label: 'High', value: 10 },
   ];
 
-  const toggleSelection = (arr: string[], value: string, setter: (v: string[]) => void) => {
+  const toggleSelection = (arr: string[], value: string, setter: (v: string[]) => void): void => {
     setter(arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]);
   };
 
-  const handleUserTypeSelect = (type: string) => {
+  const handleUserTypeSelect = (type: string): void => {
     setSelectedUserType(type);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    const newErrors: { userType?: string; usageTypes?: string } = {};
-    if (!selectedUserType)
-      newErrors.userType = tt.preferencesUserTypeError || 'Please select a user type';
-    if (selectedUsageTypes.length === 0)
-      newErrors.usageTypes =
-        tt.preferencesUsageTypeError || 'Please select at least one usage type';
+    const newErrors: { username?: string; userType?: string; usageTypes?: string } = {};
+    if (!username || username.trim().length === 0) {
+      newErrors.username = 'Username is required';
+    }
+    if (!selectedUserType) newErrors.userType = 'Please select a user type';
+    if (!Array.isArray(selectedUsageTypes) || selectedUsageTypes.length === 0)
+      newErrors.usageTypes = 'Please select at least one usage type';
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     setErrors({});
-    const preferences = {
-      userType: selectedUserType,
+    setSubmitError('');
+    const preferences: PreferencesPayload = {
+      username,
+      userType: selectedUserType as string,
       usageTypes: selectedUsageTypes,
       alertSensitivity,
     };
-    localStorage.setItem('userPreferences', JSON.stringify(preferences));
-    if (onSubmit) onSubmit();
+
+    try {
+      setIsSaving(true);
+      await savePreferences(preferences);
+      if (onSubmit) onSubmit();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setSubmitError(`Failed to upload preferences: ${message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -141,6 +209,7 @@ export default function PreferencesForm({
           {onThemeToggle && <ThemeToggle theme={theme} onThemeToggle={onThemeToggle} />}
         </div>
         <h2 className="preferences-title">{tt.preferencesTitle || 'Tell us about yourself'}</h2>
+        {errors.username && <div className="preferences-error">{errors.username}</div>}
         <div className="preferences-section">
           <div className="preferences-label">{tt.preferencesUserType || 'Are you a...?'} </div>
           <div className="preferences-pills">
@@ -192,7 +261,8 @@ export default function PreferencesForm({
             ))}
           </div>
         </div>
-        <button className="preferences-submit" type="submit">
+        {submitError && <div className="preferences-error">{submitError}</div>}
+        <button className="preferences-submit" type="submit" disabled={isSaving}>
           {tt.preferencesSave || 'Save Preferences'}
         </button>
       </form>

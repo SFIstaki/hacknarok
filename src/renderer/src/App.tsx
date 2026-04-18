@@ -32,6 +32,7 @@ function App(): React.JSX.Element {
   if (showPreferences) {
     return (
       <PreferencesForm
+        username={username}
         onSubmit={() => setShowPreferences(false)}
         t={translations[lang]}
         theme={theme}
