@@ -144,9 +144,9 @@ export default function Layout({
       case 'stats':
         return <Stats t={t} />;
       case 'tips':
-        return <Tips t={t} />;
+        return <Tips />;
       case 'settings':
-        return <Settings onLangToggle={onLangToggle} t={t} />;
+        return <Settings t={t} />;
       default:
         return <Home t={t} onNavigate={setActivePage} theme={theme} />;
     }

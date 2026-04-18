@@ -8,11 +8,26 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
+    "native:node": "npm rebuild better-sqlite3",
+    "native:electron": "electron-builder install-app-deps && npx electron-rebuild -f -w better-sqlite3",
+    "focus:seed": "npm run native:node && tsx src/main/focus/dev/seed.ts",
+    "focus:seed:set2": "npm run native:node && tsx src/main/focus/dev/seed.ts --scenario=set2",
+    "focus:seed:set3": "npm run native:node && tsx src/main/focus/dev/seed.ts --scenario=set3",
+    "focus:seed:absurd": "npm run native:node && tsx src/main/focus/dev/seed.ts --scenario=absurd",
+    "focus:seed:volatile": "npm run native:node && tsx src/main/focus/dev/seed.ts --scenario=volatile",
+    "focus:test:classifier": "tsx src/main/focus/dev/classifier-test.ts",
+    "focus:test:smoke": "npm run native:node && tsx src/main/focus/dev/smoke-test.ts",
+    "focus:test": "npm run focus:test:classifier && npm run focus:seed && npm run focus:test:smoke",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "electron-vite preview",
-    "dev": "electron-vite dev",
+    "dev": "npm run native:electron && electron-vite dev",
+    "dev:electron": "npm run native:electron && electron-vite dev",
+    "dev:set2": "npm run focus:seed:set2 && FOCUS_DB_PATH=\"$PWD/tmp/focus-monitor.seed.db\" npm run dev:electron",
+    "dev:set3": "npm run focus:seed:set3 && FOCUS_DB_PATH=\"$PWD/tmp/focus-monitor.seed.db\" npm run dev:electron",
+    "dev:absurd": "npm run focus:seed:absurd && FOCUS_DB_PATH=\"$PWD/tmp/focus-monitor.seed.db\" npm run dev:electron",
+    "dev:volatile": "npm run focus:seed:volatile && FOCUS_DB_PATH=\"$PWD/tmp/focus-monitor.seed.db\" npm run dev:electron",
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
@@ -22,7 +37,9 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "active-win": "^8.2.1",
+    "better-sqlite3": "^12.9.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
@@ -43,6 +60,7 @@
     "prettier": "^3.8.3",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.2.6"
   }

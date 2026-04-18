@@ -5,7 +5,6 @@ import '../assets/preferences.css';
 import React, { useState, useEffect, useRef } from 'react';
 
 interface SettingsProps {
-  onLangToggle: () => void;
   t: T;
 }
 
@@ -81,6 +80,9 @@ export default function Settings({ onLangToggle, t }: SettingsProps): React.JSX.
     flash();
   };
 
+export default function Settings({ t }: SettingsProps): React.JSX.Element {
+  const [mode, setMode] = React.useState<'relaks' | 'focus'>('focus');
+  const [showModeInfo, setShowModeInfo] = React.useState(false);
   return (
     <div className="page-content settings-page">
       <div className="settings-container">
