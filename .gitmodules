@@ -1,0 +1,3 @@
+[submodule "external/head-pose-estimation"]
+	path = external/head-pose-estimation
+	url = git@github.com:yinguobing/head-pose-estimation.git
