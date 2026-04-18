@@ -5,6 +5,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { FocusService } from './focus/service';
 import { FocusMonitor } from './focus/monitor';
+import { runOpenCVTest } from './opencv-test';
 
 let focusService: FocusService | null = null;
 interface PreferencesPayload {
@@ -86,6 +87,8 @@ app
 
     // IPC test
     ipcMain.on('ping', () => console.log('pong'));
+
+    runOpenCVTest().catch((err) => console.error('[OpenCV] Test failed:', err));
 
     const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
     focusService = new FocusService(dbPath);
