@@ -165,10 +165,10 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
   const focusMinutes = Math.round(report.stats.lockedMs / 60_000);
   const hasSnapshot = report.reportStatus.hasTodaySnapshot;
   const summaryItems = [
-    { label: 'Locked', value: formatDuration(report.stats.lockedMs) },
-    { label: 'Fading', value: formatDuration(report.stats.fadingMs) },
-    { label: 'Gone', value: formatDuration(report.stats.goneMs) },
-    { label: 'Delta', value: formatPercent(report.delta.percentChange) },
+    { label: t.focusStateNames.locked, value: formatDuration(report.stats.lockedMs) },
+    { label: t.focusStateNames.fading, value: formatDuration(report.stats.fadingMs) },
+    { label: t.focusStateNames.gone, value: formatDuration(report.stats.goneMs) },
+    { label: t.deltaLabel || 'Delta', value: formatPercent(report.delta.percentChange) },
   ];
 
   return (
@@ -179,7 +179,9 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
           <p className="focus-state-name" style={{ color: stateColor.text }}>
             {t.focusStateNames[report.currentState]}
           </p>
-          <p className="focus-state-subline">{report.currentAppName ?? 'No active app detected'}</p>
+          <p className="focus-state-subline">
+            {report.currentAppName ?? (t.noActiveApp || 'No active app detected')}
+          </p>
           <div className="focus-state-pills">
             {(['locked', 'fading', 'gone'] as FocusState[]).map((s) => (
               <span
@@ -214,11 +216,14 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
           </div>
           <div className="stats-callout">
             <p className="stats-main">
-              {t.statMain1} <span className="stats-badge">{formatPercent(report.delta.percentChange)}</span>{' '}
+              {t.statMain1}{' '}
+              <span className="stats-badge">{formatPercent(report.delta.percentChange)}</span>{' '}
               {t.statMain2}
             </p>
             <p className="stats-sub">
-              {hasSnapshot ? t.statSub : 'No daily snapshot yet. Generate a report in Stats.'}
+              {hasSnapshot
+                ? t.statSub
+                : t.noDailySnapshot || 'No daily snapshot yet. Generate a report in Stats.'}
             </p>
             <button className="stats-btn" onClick={() => onNavigate('stats')}>
               {t.statBtn}
@@ -240,7 +245,7 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
               />
             ))
           ) : (
-            <div className="timeline-empty">No timeline data yet</div>
+            <div className="timeline-empty">{t.noTimelineData || 'No timeline data yet'}</div>
           )}
         </div>
         {report.topApps.length > 0 && (
@@ -256,7 +261,7 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
 
       {(isLoading || error) && (
         <div className="home-status-line">
-          {isLoading ? 'Loading summary…' : error}
+          {isLoading ? t.loadingSummary || 'Loading summary…' : error}
         </div>
       )}
 

@@ -5,6 +5,7 @@ Ten dokument opisuje aktualnie wdrożoną logikę backendu dla monitora skupieni
 ## Zakres
 
 Wdrożono backend bez zmian w frontendzie:
+
 - zbieranie zdarzeń skupienia (`locked`, `fading`, `gone`),
 - klasyfikator stanu oparty o mysz + aktywne okno,
 - agregacja dzienna na podstawie surowych eventów,
@@ -15,10 +16,12 @@ Wdrożono backend bez zmian w frontendzie:
 ## Monitorowanie skupienia (v1)
 
 Aktualna wersja monitoringu działa w main process i co 5 sekund pobiera:
+
 - pozycję kursora (delta ruchu myszy),
 - aktywne okno systemowe (aplikacja + tytuł okna).
 
 Heurystyka klasyfikacji:
+
 - `gone` — brak aktywności / bardzo niski ruch myszy,
 - `fading` — częste przełączenia okien/tytułów,
 - `locked` — stabilne okno + kontrolowany ruch myszy.
@@ -30,32 +33,38 @@ Uwaga: przełączanie kart w przeglądarce jest obecnie wykrywane po zmianach ty
 Baza: `focus-monitor.db` (w katalogu `app.getPath('userData')`).
 
 Tabele:
+
 - `focus_events` — surowe eventy wejściowe,
 - `daily_reports` — gotowe snapshoty metryk dziennych (timeline/statystyki/delta/topApps).
 
 Indeksy:
+
 - po `ts` w `focus_events`,
 - po `day_start_ts` w `daily_reports`.
 
 ## Metryki dashboardu
 
 ### 1) today ("pasmo uwagi")
+
 - szereg czasowy co 5 minut,
 - oś X: czas,
 - oś Y: stan (`locked` / `fading` / `gone`).
 
 ### 2) delta (dziś vs wczoraj)
+
 - porównanie czasu `locked`:
   - `todayLockedMs`,
   - `yesterdayLockedMs`,
   - `percentChange`.
 
 ### 3) topApps
+
 - top 3 aplikacje aktywne podczas stanu `locked` (po czasie trwania).
 
 ## IPC kontrakt
 
 ### Ingest
+
 - `focus:ingest`
 - payload:
   - `state: 'locked' | 'fading' | 'gone'`
@@ -64,6 +73,7 @@ Indeksy:
   - `ts?: number`
 
 ### Dashboard
+
 - `reports:today` (request/response)
 - `dashboard:update` (push po wygenerowaniu snapshotu)
 
@@ -104,6 +114,7 @@ Przykładowy `reports:today` response:
 ```
 
 ### Raport (snapshot)
+
 - `reports:generate` (request/response)
 - agreguje dane z SQLite dla wskazanego dnia.
 
@@ -185,12 +196,14 @@ Przykładowy `reports:generate` response:
 ## Generowanie danych i testy
 
 Dodane komendy:
+
 - `npm run focus:seed` — generuje przykładowe dane (wczoraj + dziś) do pliku `tmp/focus-monitor.seed.db`,
 - `npm run focus:test:classifier` — test heurystyki klasyfikatora (`locked` / `fading` / `gone`),
 - `npm run focus:test:smoke` — smoke test agregacji i metryk na zseedowanej bazie,
 - `npm run focus:test` — pełna sekwencja: classifier test + seed + smoke.
 
 Pliki pomocnicze:
+
 - `src/main/focus/dev/seed.ts`,
 - `src/main/focus/dev/classifier-test.ts`,
 - `src/main/focus/dev/smoke-test.ts`.
@@ -204,10 +217,12 @@ Dodać prosty `FocusIngestor` (stub/symulator eventów), aby testować dashboard
 W tym etapie domknięto 3 kluczowe obszary integracji backendu z dashboardem:
 
 1. Kontrakt IPC + przykładowe payloady
+
 - doprecyzowano kontrakt kanałów `reports:today`, `reports:generate`, `dashboard:update`,
 - dodano przykładowe request/response JSON, aby frontend mógł integrować się bez zgadywania formatu danych.
 
 2. Status ostatniej generacji snapshotu
+
 - rozszerzono `ReportsTodayResponse` o pole `reportStatus`, które zawiera:
   - `hasTodaySnapshot`,
   - `latestSnapshotGeneratedAtTs`,
@@ -216,11 +231,13 @@ W tym etapie domknięto 3 kluczowe obszary integracji backendu z dashboardem:
 - dzięki temu dashboard może jasno pokazać, czy i kiedy raport dzienny został policzony.
 
 3. Retencja danych
+
 - dodano automatyczne usuwanie danych starszych niż 60 dni:
   - `focus_events`,
   - `daily_reports`.
 - cleanup uruchamia się przy starcie serwisu oraz po generacji snapshotu.
 
 Walidacja po zmianach:
+
 - `npm run focus:test` ✅
 - `npm run build` ✅

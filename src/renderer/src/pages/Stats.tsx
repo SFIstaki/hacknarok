@@ -171,7 +171,10 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
       };
     }
 
-    const peak = hourlySeries.reduce((acc, point) => (point.score > acc.score ? point : acc), hourlySeries[0]);
+    const peak = hourlySeries.reduce(
+      (acc, point) => (point.score > acc.score ? point : acc),
+      hourlySeries[0]
+    );
 
     let driftHour: number | null = null;
     for (let i = 1; i < hourlySeries.length; i += 1) {
@@ -209,7 +212,7 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
   const hoveredDensePoint =
     hoveredBucketStart === null
       ? null
-      : denseSeries.find((item) => item.bucketStart === hoveredBucketStart) ?? null;
+      : (denseSeries.find((item) => item.bucketStart === hoveredBucketStart) ?? null);
 
   const visibleSeries = useMemo(() => {
     if (denseSeries.length === 0) {
@@ -273,11 +276,13 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
 
   const denseRangeStart = visibleSeriesDownsampled[0]?.bucketStart ?? Date.now();
   const denseRangeEnd =
-    visibleSeriesDownsampled[visibleSeriesDownsampled.length - 1]?.bucketStart ?? denseRangeStart + 1;
+    visibleSeriesDownsampled[visibleSeriesDownsampled.length - 1]?.bucketStart ??
+    denseRangeStart + 1;
   const denseRange = Math.max(1, denseRangeEnd - denseRangeStart);
 
   const chartPoints = visibleSeriesDownsampled.map((point) => {
-    const x = chartGeometry.padX + ((point.bucketStart - denseRangeStart) / denseRange) * innerWidth;
+    const x =
+      chartGeometry.padX + ((point.bucketStart - denseRangeStart) / denseRange) * innerWidth;
     const y = chartGeometry.padY + (1 - point.score) * innerHeight;
     return { ...point, x, y };
   });
@@ -338,21 +343,27 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
   return (
     <div className="page-content stats-page">
       <div className="stats-header-row">
-        <h2 className="stats-title">Dashboard summary & report</h2>
-        <button className="stats-generate-btn" onClick={() => void generateReport()} disabled={isGenerating}>
-          {isGenerating ? 'Generating…' : 'Generate today report'}
+        <h2 className="stats-title">{_t.statsTitle || 'Dashboard summary & report'}</h2>
+        <button
+          className="stats-generate-btn"
+          onClick={() => void generateReport()}
+          disabled={isGenerating}
+        >
+          {isGenerating
+            ? _t.generating || 'Generating…'
+            : _t.generateTodayReport || 'Generate today report'}
         </button>
       </div>
 
       {today && (
         <div className="stats-kpi-grid">
           <div className="stats-kpi-card">
-            <div className="stats-kpi-label">Current state</div>
-            <div className="stats-kpi-value">{today.currentState}</div>
+            <div className="stats-kpi-label">{_t.currentStateLabel || 'Current state'}</div>
+            <div className="stats-kpi-value">{_t.focusStateNames[today.currentState]}</div>
           </div>
 
           <div className="stats-section-card chart-card">
-            <h3 className="stats-section-title">Focus mix (simple)</h3>
+            <h3 className="stats-section-title">{_t.focusMixTitle || 'Focus mix (simple)'}</h3>
             <div className="focus-mix-wrap">
               <div
                 className="focus-mix-donut"
@@ -366,24 +377,24 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
               >
                 <div className="focus-mix-inner">
                   <div className="focus-mix-main">{Math.round(focusShare.lockedPct)}%</div>
-                  <div className="focus-mix-sub">Locked</div>
+                  <div className="focus-mix-sub">{_t.focusStateNames.locked}</div>
                 </div>
               </div>
 
               <div className="focus-mix-legend">
                 <div className="legend-row">
                   <span className="legend-dot legend-dot--locked" />
-                  <span>Locked</span>
+                  <span>{_t.focusStateNames.locked}</span>
                   <strong>{Math.round(focusShare.lockedPct)}%</strong>
                 </div>
                 <div className="legend-row">
                   <span className="legend-dot legend-dot--fading" />
-                  <span>Drifting</span>
+                  <span>{_t.focusStateNames.fading}</span>
                   <strong>{Math.round(focusShare.driftingPct)}%</strong>
                 </div>
                 <div className="legend-row">
                   <span className="legend-dot legend-dot--gone" />
-                  <span>Gone</span>
+                  <span>{_t.focusStateNames.gone}</span>
                   <strong>{Math.round(focusShare.gonePct)}%</strong>
                 </div>
               </div>
@@ -391,19 +402,27 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
           </div>
 
           <div className="stats-section-card chart-card">
-            <h3 className="stats-section-title">Delta context</h3>
+            <h3 className="stats-section-title">{_t.deltaContextTitle || 'Delta context'}</h3>
             <div className="report-block">
-              <div>Today locked: {formatDuration(today.stats.lockedMs)}</div>
-              <div>Yesterday locked: {formatDuration(today.delta.yesterdayLockedMs)}</div>
               <div>
-                Change: <strong>{formatPercent(today.delta.percentChange)}</strong>
+                {_t.todayLockedLabel || 'Today locked'}: {formatDuration(today.stats.lockedMs)}
               </div>
-              <div className="report-meta">Compact view: only key trend + peak + drift.</div>
+              <div>
+                {_t.yesterdayLockedLabel || 'Yesterday locked'}:{' '}
+                {formatDuration(today.delta.yesterdayLockedMs)}
+              </div>
+              <div>
+                {_t.changeLabel || 'Change'}:{' '}
+                <strong>{formatPercent(today.delta.percentChange)}</strong>
+              </div>
+              <div className="report-meta">
+                {_t.compactViewMeta || 'Compact view: only key trend + peak + drift.'}
+              </div>
             </div>
           </div>
 
           <div className="stats-section-card chart-card">
-            <h3 className="stats-section-title">Top apps (locked time)</h3>
+            <h3 className="stats-section-title">{_t.topAppsTitle || 'Top apps (locked time)'}</h3>
             {today.topApps.length > 0 ? (
               <div className="top-apps-chart">
                 {today.topApps.map((app) => {
@@ -415,19 +434,24 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                         <strong>{formatDuration(app.durationMs)}</strong>
                       </div>
                       <div className="top-apps-chart-track">
-                        <div className="top-apps-chart-fill" style={{ width: `${Math.max(6, width)}%` }} />
+                        <div
+                          className="top-apps-chart-fill"
+                          style={{ width: `${Math.max(6, width)}%` }}
+                        />
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="timeline-empty">No top apps yet</p>
+              <p className="timeline-empty">{_t.noTopApps || 'No top apps yet'}</p>
             )}
           </div>
 
           <div className="stats-section-card stats-kpi-card--wide">
-            <h3 className="stats-section-title">Attention timeline (today)</h3>
+            <h3 className="stats-section-title">
+              {_t.attentionTimelineTitle || 'Attention timeline (today)'}
+            </h3>
             <div className="timeline-bar">
               {today.timeline.length > 0 ? (
                 today.timeline.map((point) => (
@@ -447,36 +471,44 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                   />
                 ))
               ) : (
-                <div className="timeline-empty">No snapshot timeline yet</div>
+                <div className="timeline-empty">
+                  {_t.noSnapshotTimeline || 'No snapshot timeline yet'}
+                </div>
               )}
             </div>
           </div>
 
           {report && (
             <div className="stats-section-card stats-kpi-card--wide">
-              <h3 className="stats-section-title">Generated report snapshot</h3>
+              <h3 className="stats-section-title">
+                {_t.generatedReportTitle || 'Generated report snapshot'}
+              </h3>
               <div className="report-grid">
                 <div className="report-block">
-                  <div className="report-block-title">Today</div>
+                  <div className="report-block-title">{_t.todayLabel || 'Today'}</div>
                   <div>Locked: {formatDuration(report.stats.lockedMs)}</div>
                   <div>Fading: {formatDuration(report.stats.fadingMs)}</div>
                   <div>Gone: {formatDuration(report.stats.goneMs)}</div>
                 </div>
                 <div className="report-block">
-                  <div className="report-block-title">Yesterday</div>
+                  <div className="report-block-title">{_t.yesterdayLabel || 'Yesterday'}</div>
                   <div>Locked: {formatDuration(report.yesterdayStats.lockedMs)}</div>
                   <div>Fading: {formatDuration(report.yesterdayStats.fadingMs)}</div>
                   <div>Gone: {formatDuration(report.yesterdayStats.goneMs)}</div>
                 </div>
                 <div className="report-block">
-                  <div className="report-block-title">Delta</div>
+                  <div className="report-block-title">{_t.deltaLabel || 'Delta'}</div>
                   <div>{formatPercent(report.delta.percentChange)}</div>
-                  <div className="report-meta">Generated: {new Date(report.generatedAtTs).toLocaleString()}</div>
+                  <div className="report-meta">
+                    Generated: {new Date(report.generatedAtTs).toLocaleString()}
+                  </div>
                 </div>
               </div>
 
               <div className="report-top-apps">
-                <div className="report-block-title">Top apps (locked)</div>
+                <div className="report-block-title">
+                  {_t.topAppsLockedTitle || 'Top apps (locked)'}
+                </div>
                 {report.topApps.length > 0 ? (
                   <ul>
                     {report.topApps.map((app) => (
@@ -487,7 +519,7 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                     ))}
                   </ul>
                 ) : (
-                  <p>No apps yet</p>
+                  <p>{_t.noAppsYet || 'No apps yet'}</p>
                 )}
               </div>
             </div>
@@ -495,7 +527,9 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
 
           <div className="stats-kpi-card stats-kpi-card--wide">
             <div className="stats-section-head">
-              <h3 className="stats-section-title">Attention span by hour</h3>
+              <h3 className="stats-section-title">
+                {_t.attentionSpanByHourTitle || 'Attention span by hour'}
+              </h3>
               <div className="chart-zoom-controls" role="group" aria-label="Chart zoom range">
                 {ZOOM_OPTIONS_HOURS.map((hours) => (
                   <button
@@ -517,8 +551,20 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                   style={{ width: '100%' }}
                   onMouseLeave={() => setHoveredBucketStart(null)}
                 >
-                  <line x1={chartGeometry.padX} y1={chartGeometry.padY} x2={chartGeometry.padX} y2={chartGeometry.height - chartGeometry.padY} className="attention-axis" />
-                  <line x1={chartGeometry.padX} y1={chartGeometry.height - chartGeometry.padY} x2={chartGeometry.width - chartGeometry.padX} y2={chartGeometry.height - chartGeometry.padY} className="attention-axis" />
+                  <line
+                    x1={chartGeometry.padX}
+                    y1={chartGeometry.padY}
+                    x2={chartGeometry.padX}
+                    y2={chartGeometry.height - chartGeometry.padY}
+                    className="attention-axis"
+                  />
+                  <line
+                    x1={chartGeometry.padX}
+                    y1={chartGeometry.height - chartGeometry.padY}
+                    x2={chartGeometry.width - chartGeometry.padX}
+                    y2={chartGeometry.height - chartGeometry.padY}
+                    className="attention-axis"
+                  />
 
                   {[0.25, 0.5, 0.75].map((tick) => {
                     const y = chartGeometry.padY + (1 - tick) * innerHeight;
@@ -535,7 +581,8 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                   })}
 
                   {hourTicks.map((tickTs) => {
-                    const x = chartGeometry.padX + ((tickTs - denseRangeStart) / denseRange) * innerWidth;
+                    const x =
+                      chartGeometry.padX + ((tickTs - denseRangeStart) / denseRange) * innerWidth;
                     return (
                       <line
                         key={`hour-grid-${tickTs}`}
@@ -564,7 +611,13 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                         style={{ fill: STATE_COLORS[point.state] }}
                         className="attention-point-glow"
                       />
-                      <circle cx={point.x} cy={point.y} r={2.8} style={{ fill: STATE_COLORS[point.state] }} className="attention-point" />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={2.8}
+                        style={{ fill: STATE_COLORS[point.state] }}
+                        className="attention-point"
+                      />
                     </g>
                   ))}
 
@@ -573,10 +626,17 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                       return null;
                     }
 
-                    const x = chartGeometry.padX + ((tickTs - denseRangeStart) / denseRange) * innerWidth;
+                    const x =
+                      chartGeometry.padX + ((tickTs - denseRangeStart) / denseRange) * innerWidth;
                     const hour = new Date(tickTs).getHours();
                     return (
-                      <text key={`hour-label-${tickTs}`} x={x} y={chartGeometry.height - 8} textAnchor="middle" className="attention-hour-label">
+                      <text
+                        key={`hour-label-${tickTs}`}
+                        x={x}
+                        y={chartGeometry.height - 8}
+                        textAnchor="middle"
+                        className="attention-hour-label"
+                      >
                         {String(hour).padStart(2, '0')}
                       </text>
                     );
@@ -601,12 +661,19 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
 
               <div className="attention-insight-row">
                 <span>
-                  Peak: <strong>{attentionInsights.peakHour !== null ? `${String(attentionInsights.peakHour).padStart(2, '0')}:00` : 'n/a'}</strong>
+                  Peak:{' '}
+                  <strong>
+                    {attentionInsights.peakHour !== null
+                      ? `${String(attentionInsights.peakHour).padStart(2, '0')}:00`
+                      : 'n/a'}
+                  </strong>
                 </span>
                 <span>
                   Drifting start:{' '}
                   <strong>
-                    {attentionInsights.driftHour !== null ? `${String(attentionInsights.driftHour).padStart(2, '0')}:00` : 'not detected'}
+                    {attentionInsights.driftHour !== null
+                      ? `${String(attentionInsights.driftHour).padStart(2, '0')}:00`
+                      : 'not detected'}
                   </strong>
                 </span>
                 <span>
@@ -620,7 +687,6 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
               </div>
             </div>
           </div>
-
         </div>
       )}
 
