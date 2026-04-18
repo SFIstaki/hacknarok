@@ -86,6 +86,7 @@ export default function PreferencesForm({
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [selectedUsageTypes, setSelectedUsageTypes] = useState<string[]>([]);
   const [alertSensitivity, setAlertSensitivity] = useState<number>(30);
+  const [errors, setErrors] = useState<{ userType?: string; usageTypes?: string }>({});
 
   const userTypes = tt.preferencesUserTypes || ['Student', 'Professional', 'Freelancer', 'Other'];
   const usageTypes = tt.preferencesUsageTypes || [
@@ -112,6 +113,17 @@ export default function PreferencesForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: { userType?: string; usageTypes?: string } = {};
+    if (!selectedUserType)
+      newErrors.userType = tt.preferencesUserTypeError || 'Please select a user type';
+    if (selectedUsageTypes.length === 0)
+      newErrors.usageTypes =
+        tt.preferencesUsageTypeError || 'Please select at least one usage type';
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
     const preferences = {
       userType: selectedUserType,
       usageTypes: selectedUsageTypes,
@@ -143,6 +155,7 @@ export default function PreferencesForm({
               </button>
             ))}
           </div>
+          {errors.userType && <div className="preferences-error">{errors.userType}</div>}
         </div>
         <div className="preferences-section">
           <div className="preferences-label">
@@ -160,6 +173,7 @@ export default function PreferencesForm({
               </button>
             ))}
           </div>
+          {errors.usageTypes && <div className="preferences-error">{errors.usageTypes}</div>}
         </div>
         <div className="preferences-section">
           <div className="preferences-label">
