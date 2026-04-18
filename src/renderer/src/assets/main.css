@@ -1405,3 +1405,23 @@
   border-radius: 12px;
   padding: 10px 12px;
 }
+
+.camera-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.camera-feed {
+  width: 100%;
+  max-width: 800px;
+  border-radius: 12px;
+  background: #000;
+}
+
+.camera-error {
+  color: var(--text);
+  opacity: 0.6;
+}
