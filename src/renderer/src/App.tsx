@@ -1,35 +1,60 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useState } from 'react';
+import Login from './components/Login';
+import { translations } from './i18n';
+import Layout from './components/Layout';
+import PreferencesForm from './pages/Preferences';
+import type { Lang } from './i18n';
+
+export type Theme = 'light' | 'dark';
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const [username, setUsername] = useState<string | null>(null);
+  const [theme, setTheme] = useState<Theme>('light');
+  const [lang, setLang] = useState<Lang>('en');
+  const [showPreferences, setShowPreferences] = useState<boolean>(false);
+
+  if (!username) {
+    return (
+      <Login
+        onLogin={(name) => {
+          setUsername(name);
+          setShowPreferences(true);
+        }}
+        theme={theme}
+        onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        lang={lang}
+        onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+        t={translations[lang]}
+      />
+    );
+  }
+
+  if (showPreferences) {
+    return (
+      <PreferencesForm
+        onSubmit={() => setShowPreferences(false)}
+        t={translations[lang]}
+        theme={theme}
+        onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        lang={lang}
+        onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+      />
+    );
+  }
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
-  )
+    <Layout
+      username={username}
+      onLogout={() => {
+        setUsername(null);
+        setShowPreferences(false);
+      }}
+      theme={theme}
+      onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      lang={lang}
+      onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+    />
+  );
 }
 
-export default App
+export default App;

@@ -1,0 +1,120 @@
+/* Preferences header controls (form top right toggles) */
+.preferences-header-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.preferences-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(255, 245, 230, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 45%),
+    linear-gradient(175deg, #c8eafa 0%, #9cd7f0 45%, #6ab8dc 100%);
+}
+
+.preferences-page.dark {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(196, 154, 114, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 15%, rgba(93, 186, 224, 0.1) 0%, transparent 45%),
+    linear-gradient(175deg, #0d2a3d 0%, #072b3d 50%, #040f18 100%);
+}
+
+.preferences-form {
+  max-width: 420px;
+  margin: 12px auto 64px auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 36px 32px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.preferences-form.dark {
+  background: #101c26;
+}
+.preferences-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+  text-align: center;
+}
+.preferences-section {
+  margin-bottom: 0;
+}
+.preferences-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.preferences-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pill {
+  padding: 8px 20px;
+  border-radius: 16px;
+  border: 1.5px solid var(--p100);
+  background: var(--bg-card2);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+  font-size: 15px;
+  outline: none;
+}
+.pill.selected {
+  background: var(--p50);
+  border-color: var(--p400);
+  color: #222;
+}
+
+.dark .pill.selected {
+  color: #222;
+}
+.preferences-submit {
+  margin-top: 18px;
+  padding: 10px 28px;
+  border-radius: 18px;
+  border: 1.5px solid var(--p100);
+  background: var(--bg-card2);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+.preferences-submit:hover,
+.preferences-submit:focus,
+.preferences-submit:active {
+  background: var(--p50);
+  border-color: var(--p400);
+  color: #222;
+}
+.dark .preferences-submit:hover,
+.dark .preferences-submit:focus,
+.dark .preferences-submit:active {
+  color: #222;
+}
+
+.preferences-error {
+  color: #e53e3e;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.dark .preferences-error {
+  color: #fc8181;
+}
