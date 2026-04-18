@@ -1,0 +1,203 @@
+.tips-page {
+  padding: 12px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tips-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tips-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.tips-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── Grid ───────────────────────────────────────────── */
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── Card ───────────────────────────────────────────── */
+
+.exercise-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s,
+    transform 0.25s,
+    background 0.25s;
+}
+
+.exercise-card--running {
+  border-color: var(--accent);
+  background: var(--bg-card2);
+  box-shadow:
+    0 0 0 4px rgba(93, 186, 224, 0.22),
+    0 8px 32px rgba(93, 186, 224, 0.12);
+  transform: scale(1.025);
+}
+
+.exercise-card--done {
+  border-color: #48bb78;
+  box-shadow:
+    0 0 0 3px rgba(72, 187, 120, 0.15),
+    var(--shadow-sm);
+}
+
+.exercise-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.exercise-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.exercise-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exercise-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.exercise-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── Footer row ─────────────────────────────────────── */
+
+.exercise-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ── Ring ───────────────────────────────────────────── */
+
+.exercise-ring-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+
+.exercise-ring {
+  display: block;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 5;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.exercise-card--done .ring-progress {
+  stroke: #48bb78;
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  pointer-events: none;
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+
+.exercise-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  align-items: flex-end;
+}
+
+.exercise-btn {
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 20px;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+  width: 100%;
+  max-width: 120px;
+}
+
+.exercise-btn:active {
+  transform: scale(0.97);
+}
+
+.exercise-btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.exercise-btn--primary:hover {
+  opacity: 0.88;
+}
+
+.exercise-card--done .exercise-btn--primary {
+  background: #48bb78;
+}
+
+.exercise-btn--secondary {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.exercise-btn--secondary:hover {
+  opacity: 0.8;
+}

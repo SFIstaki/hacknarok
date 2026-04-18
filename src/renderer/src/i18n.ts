@@ -1,4 +1,13 @@
 export type Lang = 'en' | 'pl';
+export type FocusState = 'locked' | 'fading' | 'gone';
+
+export interface Exercise {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  duration: number; // seconds
+}
 
 export const translations = {
   en: {
@@ -6,7 +15,15 @@ export const translations = {
     preferencesUserType: 'You are a...',
     preferencesUserTypes: ['Student', 'Professional', 'Freelancer', 'Other'],
     preferencesUsageType: 'How do you plan on using the app?',
-    preferencesUsageTypes: ['Working', 'Studying', 'Relax', 'Research', 'Writing', 'Other'],
+    preferencesUsageTypes: [
+      'Working',
+      'Studying',
+      'Relax',
+      'Watch a movie',
+      'Research',
+      'Writing',
+      'Other',
+    ],
     preferencesUserTypeError: 'Please select a user type',
     preferencesUsageTypeError: 'Please select at least one usage type',
     preferencesAlertSensitivity: 'Alert sensitivity',
@@ -20,15 +37,17 @@ export const translations = {
     settingsAppMode: 'App Mode',
     settingsAppModeHelp: 'What are the modes',
     settingsAppModeHelpAria: 'Show mode descriptions',
-    settingsModeRelaks: 'Relaks',
+    settingsModeRelax: 'Relax',
     settingsModeFocus: 'Focus',
-    settingsModeRelaksDesc:
+    settingsModeRelaxDesc:
       'For relaxing activities: reading, watching movies, being present, not much intellectual work or movement.',
     settingsModeFocusDesc: 'For work, studying, deep thinking, and productivity.',
     settingsModesTitle: 'App Modes',
     settingsClose: 'Close',
     settingsUnconfuseTime: 'Unconfuse time',
     settingsUnconfuseTimeUnit: 'minutes (mocked)',
+    settingsProfileSection: 'Your profile',
+    settingsSaved: 'Saved ✓',
     loginTabLogin: 'Log in',
     loginTabRegister: 'Register',
     loginTabAbout: 'About',
@@ -63,6 +82,56 @@ export const translations = {
     timelineLabel: (mins: number) => `today — ${Math.floor(mins / 60)}h ${mins % 60}min of focus`,
     dataProcessingConsent: 'By using Presently, you consent to processing your data etc.',
     mascotGreeting: 'Hi! I am SFIstak, your productivity buddy. Let me know if you need a tip! 🦫',
+    mindfulnessTitle: 'Mindfulness Breaks',
+    mindfulnessSubtitle: 'Short exercises to reset your focus',
+    exerciseStart: 'Start',
+    exercisePause: 'Pause',
+    exerciseReset: 'Reset',
+    exerciseDone: 'Done!',
+    exercises: [
+      {
+        id: 'breathing',
+        icon: '🫁',
+        title: 'Box Breathing',
+        description: 'Inhale 4 s · Hold 4 s · Exhale 4 s · Hold 4 s. Repeat 4 times.',
+        duration: 64,
+      },
+      {
+        id: 'eye-reset',
+        icon: '👁️',
+        title: 'Eye Reset',
+        description: 'Look at something 6 m away for 20 seconds. Blink softly.',
+        duration: 20,
+      },
+      {
+        id: 'body-scan',
+        icon: '🧘',
+        title: 'Body Scan',
+        description: 'Close your eyes. Slowly notice each body part from feet to head.',
+        duration: 90,
+      },
+      {
+        id: 'mindful-pause',
+        icon: '🌿',
+        title: 'Mindful Pause',
+        description: 'Notice 3 things you see, 2 you hear, 1 you feel right now.',
+        duration: 60,
+      },
+      {
+        id: 'shoulder-drop',
+        icon: '💆',
+        title: 'Shoulder Drop',
+        description: 'Raise shoulders to ears, hold 3 s, then release fully. Repeat slowly.',
+        duration: 30,
+      },
+      {
+        id: 'gratitude',
+        icon: '🙏',
+        title: 'Gratitude Moment',
+        description: 'Think of 3 small things that went well today. Let them sink in.',
+        duration: 45,
+      },
+    ] as Exercise[],
     deltaLabel: 'Delta',
     noActiveApp: 'No active app detected',
     noDailySnapshot: 'No daily snapshot yet. Generate a report in Stats.',
@@ -94,7 +163,15 @@ export const translations = {
     preferencesUserType: 'Jesteś...',
     preferencesUserTypes: ['Uczeń', 'Profesjonalista', 'Freelancer', 'Inne'],
     preferencesUsageType: 'Jak planujesz używać aplikacji?',
-    preferencesUsageTypes: ['Praca', 'Nauka', 'Relaks', 'Badania', 'Pisanie', 'Inne'],
+    preferencesUsageTypes: [
+      'Praca',
+      'Nauka',
+      'Relaks',
+      'Obejrzyj film',
+      'Badania',
+      'Pisanie',
+      'Inne',
+    ],
     preferencesUserTypeError: 'Wybierz typ użytkownika',
     preferencesUsageTypeError: 'Wybierz co najmniej jeden sposób użycia',
     preferencesAlertSensitivity: 'Czułość alertów',
@@ -108,15 +185,17 @@ export const translations = {
     settingsAppMode: 'Tryb aplikacji',
     settingsAppModeHelp: 'Czym są tryby?',
     settingsAppModeHelpAria: 'Pokaż opisy trybów',
-    settingsModeRelaks: 'Relaks',
+    settingsModeRelax: 'Relaks',
     settingsModeFocus: 'Skupienie',
-    settingsModeRelaksDesc:
+    settingsModeRelaxDesc:
       'Do relaksu: czytanie, oglądanie filmów, bycie tu i teraz, niewiele pracy intelektualnej i ruchu.',
     settingsModeFocusDesc: 'Do pracy, nauki, głębokiego skupienia i produktywności.',
     settingsModesTitle: 'Tryby aplikacji',
     settingsClose: 'Zamknij',
     settingsUnconfuseTime: 'Czas "odmętu"',
     settingsUnconfuseTimeUnit: 'minut (mockowane)',
+    settingsProfileSection: 'Twój profil',
+    settingsSaved: 'Zapisano ✓',
     loginTabLogin: 'Logowanie',
     loginTabRegister: 'Rejestracja',
     loginTabAbout: 'O aplikacji',
@@ -153,6 +232,58 @@ export const translations = {
       'Korzystając z Presently, wyrażasz zgodę na przetwarzanie swoich danych itp.',
     mascotGreeting:
       'Cześć! Jestem SFIstak, twój kumpel produktywności. Daj znać, jeśli chcesz wskazówkę! 🦫',
+    mindfulnessTitle: 'Przerwy uważności',
+    mindfulnessSubtitle: 'Krótkie ćwiczenia, żeby zresetować skupienie',
+    exerciseStart: 'Start',
+    exercisePause: 'Pauza',
+    exerciseReset: 'Reset',
+    exerciseDone: 'Gotowe!',
+    exercises: [
+      {
+        id: 'breathing',
+        icon: '🫁',
+        title: 'Oddech pudełkowy',
+        description: 'Wdech 4 s · Zatrzymaj 4 s · Wydech 4 s · Zatrzymaj 4 s. Powtórz 4 razy.',
+        duration: 64,
+      },
+      {
+        id: 'eye-reset',
+        icon: '👁️',
+        title: 'Reset wzroku',
+        description: 'Przez 20 sekund patrz na coś odległego o 6 m. Mrugaj spokojnie.',
+        duration: 20,
+      },
+      {
+        id: 'body-scan',
+        icon: '🧘',
+        title: 'Skanowanie ciała',
+        description: 'Zamknij oczy. Powoli zauważaj każdą część ciała od stóp do głowy.',
+        duration: 90,
+      },
+      {
+        id: 'mindful-pause',
+        icon: '🌿',
+        title: 'Chwila uważności',
+        description: 'Zauważ 3 rzeczy które widzisz, 2 które słyszysz, 1 którą czujesz.',
+        duration: 60,
+      },
+      {
+        id: 'shoulder-drop',
+        icon: '💆',
+        title: 'Rozluźnienie barków',
+        description:
+          'Unieś barki do uszu, zatrzymaj 3 s, a potem całkowicie opuść. Powtarzaj wolno.',
+        duration: 30,
+      },
+      {
+        id: 'gratitude',
+        icon: '🙏',
+        title: 'Chwila wdzięczności',
+        description:
+          'Przypomnij sobie 3 małe rzeczy, które dziś poszły dobrze. Pozwól im wybrzmieć.',
+        duration: 45,
+      },
+    ] as Exercise[],
     deltaLabel: 'Delta',
     noActiveApp: 'Brak aktywnej aplikacji',
     noDailySnapshot: 'Brak dziennego podsumowania. Wygeneruj raport w Statystykach.',
@@ -181,5 +312,4 @@ export const translations = {
   },
 } as const;
 
-export type FocusState = 'locked' | 'fading' | 'gone';
 export type T = (typeof translations)['en'] | (typeof translations)['pl'];
