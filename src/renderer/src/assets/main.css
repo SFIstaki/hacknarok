@@ -937,6 +937,17 @@
   font-size: 24px;
   font-weight: 700;
 }
+.stats-title {
+  font-family:
+    'Nunito',
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
 
 .stats-generate-btn {
   border: 1px solid var(--border);
@@ -996,7 +1007,15 @@
 }
 
 .stats-section-title {
-  font-size: 15px;
+  font-family:
+    'Nunito',
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 18px;
+  font-weight: 700;
   margin-bottom: 10px;
 }
 
@@ -1373,6 +1392,14 @@
 }
 
 .report-block-title {
+  font-family:
+    'Nunito',
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 16px;
   font-weight: 700;
   margin-bottom: 6px;
 }

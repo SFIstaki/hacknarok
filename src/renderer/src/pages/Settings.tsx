@@ -21,15 +21,13 @@ function savePrefs(patch: object) {
   localStorage.setItem('userPreferences', JSON.stringify({ ...current, ...patch }));
 }
 
-export default function Settings({ onLangToggle, t }: SettingsProps): React.JSX.Element {
+export default function Settings({ t }: SettingsProps): React.JSX.Element {
   const saved = loadPrefs();
   const [mode, setMode] = useState<'relax' | 'focus'>(saved.mode || 'focus');
   const [showModeInfo, setShowModeInfo] = useState(false);
-
   const [userType, setUserType] = useState<string>(saved.userType ?? '');
   const [usageTypes, setUsageTypes] = useState<string[]>(saved.usageTypes ?? []);
   const [alertSensitivity, setAlertSensitivity] = useState<number>(saved.alertSensitivity ?? 30);
-
   const [savedFlash, setSavedFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -80,19 +78,17 @@ export default function Settings({ onLangToggle, t }: SettingsProps): React.JSX.
     flash();
   };
 
-export default function Settings({ t }: SettingsProps): React.JSX.Element {
-  const [mode, setMode] = React.useState<'relaks' | 'focus'>('focus');
-  const [showModeInfo, setShowModeInfo] = React.useState(false);
   return (
     <div className="page-content settings-page">
       <div className="settings-container">
         <div className="settings-title-row">
           <h2 className="settings-title">{t.navSettings}</h2>
-          <span className={`settings-saved-flash${savedFlash ? ' visible' : ''}`}>
-            {t.settingsSaved}
-          </span>
+          {savedFlash && (
+            <span className="settings-saved-flash settings-saved-flash-green">
+              {t.settingsSaved}
+            </span>
+          )}
         </div>
-
         <div className="settings-section">
           <div className="settings-label settings-label-flex">
             {t.settingsAppMode}
@@ -126,10 +122,7 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
             </button>
           </div>
         </div>
-
         <div className="settings-section">
-          <div className="settings-label">{t.settingsProfileSection}</div>
-
           <div className="settings-sub-label">{t.preferencesUserType}</div>
           <div className="preferences-pills settings-pills">
             {userTypes.map((type) => (
@@ -143,7 +136,6 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
               </button>
             ))}
           </div>
-
           <div className="settings-sub-label" style={{ marginTop: 16 }}>
             {t.preferencesUsageType}
           </div>
@@ -159,7 +151,6 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
               </button>
             ))}
           </div>
-
           <div className="settings-sub-label" style={{ marginTop: 16 }}>
             {t.preferencesAlertSensitivity}
           </div>
@@ -177,7 +168,6 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
           </div>
         </div>
       </div>
-
       {showModeInfo && (
         <div className="settings-modal-bg" onClick={() => setShowModeInfo(false)}>
           <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
@@ -196,7 +186,6 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
           </div>
         </div>
       )}
-
       <div className="settings-consent">{t.dataProcessingConsent}</div>
     </div>
   );
