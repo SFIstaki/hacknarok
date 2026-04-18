@@ -3,7 +3,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import { FocusService } from './focus/service'
+import { FocusMonitor } from './focus/monitor'
 
+let focusService: FocusService | null = null
+<<<<<<< HEAD
 interface PreferencesPayload {
   username: string;
   userType: string;
@@ -31,6 +35,9 @@ function isValidPreferencesPayload(payload: unknown): payload is PreferencesPayl
 function sanitizeFileName(name: string): string {
   return name.trim().replace(/[^a-zA-Z0-9._-]/g, '_');
 }
+=======
+let focusMonitor: FocusMonitor | null = null
+>>>>>>> 94d132d (fixBack)
 
 function createWindow(): void {
   // Create the browser window.
@@ -79,7 +86,17 @@ app.whenReady().then(() => {
   });
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'));
+  ipcMain.on('ping', () => console.log('pong'))
+
+  const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db')
+  focusService = new FocusService(dbPath)
+  focusMonitor = new FocusMonitor({
+    sampleIntervalMs: 5000,
+    onClassifiedState: (event) => {
+      focusService?.ingest(event)
+    }
+  })
+  focusMonitor.start()
 
   ipcMain.removeHandler('preferences:save');
   ipcMain.handle('preferences:save', async (_, payload: unknown) => {
@@ -115,6 +132,9 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((error) => {
+  console.error('Main process startup failed:', error)
+  app.quit()
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -124,7 +144,15 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
-});
+})
+
+app.on('before-quit', () => {
+  focusMonitor?.stop()
+  focusMonitor = null
+
+  focusService?.shutdown()
+  focusService = null
+})
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

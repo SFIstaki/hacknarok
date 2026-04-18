@@ -3,8 +3,6 @@ import type { T, FocusState } from '../i18n';
 import type { Page } from '../types';
 
 const TIP_INTERVAL_MS = 20_000;
-const CURRENT_STATE: FocusState = 'locked';
-const FOCUS_MINUTES = 252;
 
 const STATE_COLORS = {
   light: {
@@ -19,79 +17,56 @@ const STATE_COLORS = {
   },
 } satisfies Record<string, Record<FocusState, { bg: string; text: string; glow: string }>>;
 
-const TIMELINE: { state: FocusState | 'break'; pct: number }[] = [
-  { state: 'locked', pct: 30 },
-  { state: 'break', pct: 5 },
-  { state: 'fading', pct: 12 },
-  { state: 'gone', pct: 7 },
-  { state: 'locked', pct: 18 },
-  { state: 'break', pct: 4 },
-  { state: 'locked', pct: 14 },
-  { state: 'fading', pct: 10 },
-];
-
 const TIMELINE_COLORS: Record<string, string> = {
-  locked: '#9CD7F0',
+  locked: '#8cdcb4',
   fading: '#F5C28A',
   gone: '#F09090',
-  break: '#C8EAFA',
 };
 
-const focusData = [
-  { day: 'Mon', value: 62 },
-  { day: 'Tue', value: 78 },
-  { day: 'Wed', value: 55 },
-  { day: 'Thu', value: 85 },
-  { day: 'Fri', value: 70, current: true },
-  { day: 'Sat', value: 60 },
-  { day: 'Sun', value: 74 },
-];
-const BAR_MAX = 100;
-const CHART_H = 130;
-const BAR_W = 28;
-const GAP = 10;
+type DashboardToday = Awaited<ReturnType<typeof window.api.getTodayReport>>;
 
-function FocusChart(): React.JSX.Element {
-  const totalW = focusData.length * (BAR_W + GAP) - GAP;
-  return (
-    <svg width={totalW} height={CHART_H + 28} className="focus-chart-svg">
-      {focusData.map((d, i) => {
-        const barH = (d.value / BAR_MAX) * CHART_H;
-        const x = i * (BAR_W + GAP);
-        const y = CHART_H - barH;
-        return (
-          <g key={d.day}>
-            {d.current ? (
-              <rect
-                x={x}
-                y={y}
-                width={BAR_W}
-                height={barH}
-                rx={8}
-                fill="rgba(93,186,224,0.18)"
-                stroke="#5DBAE0"
-                strokeWidth={2}
-              />
-            ) : (
-              <rect x={x} y={y} width={BAR_W} height={barH} rx={8} fill="#9CD7F0" />
-            )}
-            <text
-              x={x + BAR_W / 2}
-              y={CHART_H + 20}
-              textAnchor="middle"
-              fontSize={11}
-              fill="currentColor"
-              opacity={0.45}
-              fontFamily="Nunito, sans-serif"
-              fontWeight="600"
-            >
-              {d.day}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
+function formatDuration(ms: number): string {
+  const totalMinutes = Math.max(0, Math.round(ms / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
+function formatPercent(value: number | null): string {
+  if (value === null) {
+    return 'n/a';
+  }
+
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(1)}%`;
+}
+
+function defaultTodayReport(): DashboardToday {
+  return {
+    nowTs: Date.now(),
+    currentState: 'gone',
+    currentAppName: null,
+    currentWindowTitle: null,
+    reportStatus: {
+      hasTodaySnapshot: false,
+      latestSnapshotGeneratedAtTs: null,
+      latestSnapshotDayStartTs: null,
+      latestSnapshotDayEndTs: null,
+    },
+    timeline: [],
+    stats: {
+      lockedMs: 0,
+      fadingMs: 0,
+      goneMs: 0,
+      totalMs: 0,
+    },
+    delta: {
+      todayLockedMs: 0,
+      yesterdayLockedMs: 0,
+      percentChange: null,
+    },
+    topApps: [],
+  };
 }
 
 function BeaverMascot(): React.JSX.Element {
@@ -138,6 +113,9 @@ interface HomeProps {
 
 export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Element {
   const [tipVisible, setTipVisible] = useState(true);
+  const [report, setReport] = useState<DashboardToday>(defaultTodayReport());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tipVisible) return;
@@ -145,7 +123,53 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
     return () => clearTimeout(id);
   }, [tipVisible]);
 
-  const stateColor = STATE_COLORS[theme][CURRENT_STATE];
+  useEffect(() => {
+    let isMounted = true;
+
+    void window.api
+      .getTodayReport()
+      .then((data) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setReport(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setError('Could not load dashboard summary');
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    const unsubscribe = window.api.onDashboardUpdate((payload) => {
+      setReport(payload);
+      setError(null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const stateColor = STATE_COLORS[theme][report.currentState];
+  const focusMinutes = Math.round(report.stats.lockedMs / 60_000);
+  const hasSnapshot = report.reportStatus.hasTodaySnapshot;
+  const summaryItems = [
+    { label: 'Locked', value: formatDuration(report.stats.lockedMs) },
+    { label: 'Fading', value: formatDuration(report.stats.fadingMs) },
+    { label: 'Gone', value: formatDuration(report.stats.goneMs) },
+    { label: 'Delta', value: formatPercent(report.delta.percentChange) },
+  ];
 
   return (
     <div className="home-page">
@@ -153,15 +177,16 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
         <div className="focus-state-card">
           <p className="focus-state-label">{t.focusStateLabel}</p>
           <p className="focus-state-name" style={{ color: stateColor.text }}>
-            {t.focusStateNames[CURRENT_STATE]}
+            {t.focusStateNames[report.currentState]}
           </p>
+          <p className="focus-state-subline">{report.currentAppName ?? 'No active app detected'}</p>
           <div className="focus-state-pills">
             {(['locked', 'fading', 'gone'] as FocusState[]).map((s) => (
               <span
                 key={s}
-                className={`focus-pill ${s === CURRENT_STATE ? 'focus-pill--active' : ''}`}
+                className={`focus-pill ${s === report.currentState ? 'focus-pill--active' : ''}`}
                 style={
-                  s === CURRENT_STATE
+                  s === report.currentState
                     ? {
                         background: stateColor.bg,
                         color: stateColor.text,
@@ -178,13 +203,23 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
 
         <div className="home-main-card">
           <div className="chart-area">
-            <FocusChart />
+            <div className="summary-grid">
+              {summaryItems.map((item) => (
+                <div key={item.label} className="summary-item">
+                  <div className="summary-item-label">{item.label}</div>
+                  <div className="summary-item-value">{item.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="stats-callout">
             <p className="stats-main">
-              {t.statMain1} <span className="stats-badge">20%</span> {t.statMain2}
+              {t.statMain1} <span className="stats-badge">{formatPercent(report.delta.percentChange)}</span>{' '}
+              {t.statMain2}
             </p>
-            <p className="stats-sub">{t.statSub}</p>
+            <p className="stats-sub">
+              {hasSnapshot ? t.statSub : 'No daily snapshot yet. Generate a report in Stats.'}
+            </p>
             <button className="stats-btn" onClick={() => onNavigate('stats')}>
               {t.statBtn}
             </button>
@@ -193,17 +228,37 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
       </div>
 
       <div className="timeline-card">
-        <p className="timeline-label">{t.timelineLabel(FOCUS_MINUTES)}</p>
+        <p className="timeline-label">{t.timelineLabel(focusMinutes)}</p>
         <div className="timeline-bar">
-          {TIMELINE.map((seg, i) => (
-            <div
-              key={i}
-              className="timeline-seg"
-              style={{ flex: seg.pct, background: TIMELINE_COLORS[seg.state] }}
-            />
-          ))}
+          {report.timeline.length > 0 ? (
+            report.timeline.map((point) => (
+              <div
+                key={point.bucketStart}
+                className="timeline-seg"
+                style={{ flex: 1, background: TIMELINE_COLORS[point.state] }}
+                title={`${new Date(point.bucketStart).toLocaleTimeString()} — ${t.focusStateNames[point.state]}`}
+              />
+            ))
+          ) : (
+            <div className="timeline-empty">No timeline data yet</div>
+          )}
         </div>
+        {report.topApps.length > 0 && (
+          <div className="top-apps-inline">
+            {report.topApps.map((app) => (
+              <span key={app.appName} className="top-app-pill">
+                {app.appName}: {formatDuration(app.durationMs)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
+
+      {(isLoading || error) && (
+        <div className="home-status-line">
+          {isLoading ? 'Loading summary…' : error}
+        </div>
+      )}
 
       <div className="mascot-widget">
         <div className={`mascot-bubble ${tipVisible ? 'mascot-bubble--visible' : ''}`}>
