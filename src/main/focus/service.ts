@@ -72,10 +72,22 @@ export class FocusService {
   }
 
   getTodayReport(): ReportsTodayResponse {
-    const nowTs = Date.now();
-    const dayStartTs = startOfLocalDay(nowTs);
-    const snapshot = this.db.getDailyReport(dayStartTs);
-    const latestSnapshot = this.db.getLatestDailyReportMeta();
+    const nowTs = Date.now()
+    const dayStartTs = startOfLocalDay(nowTs)
+    const dayEndTs = endOfLocalDay(dayStartTs)
+    const yesterdayStart = dayStartTs - ONE_DAY_MS
+
+    const snapshot = this.db.getDailyReport(dayStartTs)
+    const latestSnapshot = this.db.getLatestDailyReportMeta()
+
+    const liveReport = snapshot
+      ? snapshot
+      : buildDayReportFromEvents(
+          this.db.getEventsForRange(dayStartTs, dayEndTs),
+          this.db.getEventsForRange(yesterdayStart, dayStartTs),
+          dayStartTs,
+          dayEndTs
+        )
 
     return {
       nowTs,
@@ -88,11 +100,11 @@ export class FocusService {
         latestSnapshotDayStartTs: latestSnapshot?.dayStartTs ?? null,
         latestSnapshotDayEndTs: latestSnapshot?.dayEndTs ?? null,
       },
-      timeline: snapshot?.timeline ?? [],
-      stats: snapshot?.stats ?? { lockedMs: 0, fadingMs: 0, goneMs: 0, totalMs: 0 },
-      delta: snapshot?.delta ?? { todayLockedMs: 0, yesterdayLockedMs: 0, percentChange: null },
-      topApps: snapshot?.topApps ?? [],
-    };
+      timeline: liveReport.timeline,
+      stats: liveReport.stats,
+      delta: liveReport.delta,
+      topApps: liveReport.topApps
+    }
   }
 
   generateReportSnapshot(dayStartTs: number): ReportsGenerateResponse {

@@ -340,6 +340,20 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
     };
   }, [today]);
 
+  const timelineForBar = useMemo(() => {
+    if (!today) {
+      return [] as DashboardToday['timeline'];
+    }
+
+    const points = today.timeline;
+    if (points.length <= 96) {
+      return points;
+    }
+
+    const step = Math.ceil(points.length / 96);
+    return points.filter((_, idx) => idx % step === 0);
+  }, [today]);
+
   return (
     <div className="page-content stats-page">
       <div className="stats-header-row">
@@ -453,8 +467,8 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
               {_t.attentionTimelineTitle || 'Attention timeline (today)'}
             </h3>
             <div className="timeline-bar">
-              {today.timeline.length > 0 ? (
-                today.timeline.map((point) => (
+              {timelineForBar.length > 0 ? (
+                timelineForBar.map((point) => (
                   <div
                     key={point.bucketStart}
                     className="timeline-seg"
