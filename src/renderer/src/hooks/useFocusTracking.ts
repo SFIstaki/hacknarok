@@ -47,23 +47,6 @@ const BEHAVIOR_PRIORITY: Behavior[] = [
   'headTurned',
 ];
 
-// How many seconds each behavior must persist before triggering an alert.
-// alertSens comes from user preferences (Low=60, Medium=30, High=10).
-function behaviorThreshold(b: Behavior, alertSens: number): number {
-  switch (b) {
-    case 'faceAbsent':
-      return 8;
-    case 'eyesClosed':
-      return 4;
-    case 'yawning':
-      return 3;
-    case 'lookingAway':
-      return alertSens;
-    case 'headTurned':
-      return alertSens;
-  }
-}
-
 export interface FocusTrackingResult {
   focusState: FocusState;
   activeBehaviors: Set<Behavior>;
@@ -158,7 +141,7 @@ function behaviorsToFocusState(active: Set<Behavior>): FocusState {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFocusTracking(alertSensitivitySeconds: number): FocusTrackingResult {
+export function useFocusTracking(): FocusTrackingResult {
   const [focusState, setFocusState] = useState<FocusState>('locked');
   const [activeBehaviors, setActiveBehaviors] = useState<Set<Behavior>>(new Set());
   const [alertActive, setAlertActive] = useState(false);
@@ -189,6 +172,7 @@ export function useFocusTracking(alertSensitivitySeconds: number): FocusTracking
     behaviorSince.current = {};
     behaviorFrames.current = {};
     faceDetectedRef.current = null;
+    prevFocusStateRef.current = 'locked';
     startingRef.current = false;
     alertActiveRef.current = false;
     setIsTracking(false);
@@ -254,7 +238,7 @@ export function useFocusTracking(alertSensitivitySeconds: number): FocusTracking
         }
       }
     }
-  }, [alertSensitivitySeconds]);
+  }, []);
 
   const startTracking = useCallback(async () => {
     if (startingRef.current) return;

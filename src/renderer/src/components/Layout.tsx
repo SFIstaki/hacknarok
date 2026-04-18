@@ -134,8 +134,6 @@ export default function Layout({
   const [activePage, setActivePage] = useState<Page>('home');
   const t = translations[lang];
 
-  const savedPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-  const alertSensitivity: number = savedPrefs.alertSensitivity ?? 30;
   const {
     focusState,
     isTracking,
@@ -146,7 +144,7 @@ export default function Layout({
     startTracking,
     stopTracking,
     dismissAlert,
-  } = useFocusTracking(alertSensitivity);
+  } = useFocusTracking();
 
   useEffect(() => {
     startTracking();
