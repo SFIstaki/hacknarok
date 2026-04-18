@@ -4,7 +4,7 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      sendFocusAlert: (state: string, duration: number) => void;
+      sendFocusAlert: (behavior: string) => void;
     };
   }
 }

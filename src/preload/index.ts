@@ -3,8 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
-  sendFocusAlert: (state: string, duration: number): void => {
-    ipcRenderer.send('focus-alert', { state, duration });
+  sendFocusAlert: (behavior: string): void => {
+    ipcRenderer.send('focus-alert', { behavior });
   },
 };
 

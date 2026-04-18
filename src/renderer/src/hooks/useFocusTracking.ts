@@ -7,10 +7,11 @@ import type { FocusState } from '../i18n';
 
 const INFERENCE_MS = 500;
 
-const GAZE_OFFSET_THRESHOLD = 0.25;
-const YAW_THRESHOLD = 0.16;
+const GAZE_OFFSET_THRESHOLD = 0.32; // fraction from eye center — 0 = center, 0.5 = edge
+const YAW_THRESHOLD = 0.28;
 const EAR_THRESHOLD = 0.18;
-const JAW_OPEN_THRESHOLD = 0.6; // blendshape score for yawning
+const JAW_OPEN_THRESHOLD = 0.65;
+const BEHAVIOR_SUSTAIN_FRAMES = 6; // ~3s at 500ms — avoids flickering the UI on brief glances
 
 // Landmark indices (MediaPipe 478-point model)
 const L_IRIS = 468;
@@ -99,9 +100,17 @@ function analyzeFrame(result: FaceLandmarkerResult): FrameResult {
 
   const lm: Landmark[] = result.faceLandmarks[0];
 
-  // Gaze: iris offset ratio within eye bounds
-  const lGaze = (lm[L_IRIS].x - lm[L_EYE_IN].x) / (Math.abs(lm[L_EYE_OUT].x - lm[L_EYE_IN].x) || 1);
-  const rGaze = (lm[R_IRIS].x - lm[R_EYE_IN].x) / (Math.abs(lm[R_EYE_OUT].x - lm[R_EYE_IN].x) || 1);
+  // Gaze: iris position as 0–1 ratio from the leftmost to rightmost eye corner.
+  // 0.5 = looking straight. >0.5+threshold or <0.5-threshold = looking away.
+  // We use min/max to avoid sign issues (L_EYE_OUT has smaller x than L_EYE_IN).
+  const lLeft = Math.min(lm[L_EYE_OUT].x, lm[L_EYE_IN].x);
+  const lRight = Math.max(lm[L_EYE_OUT].x, lm[L_EYE_IN].x);
+  const lGaze = lRight > lLeft ? (lm[L_IRIS].x - lLeft) / (lRight - lLeft) : 0.5;
+
+  const rLeft = Math.min(lm[R_EYE_IN].x, lm[R_EYE_OUT].x);
+  const rRight = Math.max(lm[R_EYE_IN].x, lm[R_EYE_OUT].x);
+  const rGaze = rRight > rLeft ? (lm[R_IRIS].x - rLeft) / (rRight - rLeft) : 0.5;
+
   const gazeOffset = Math.max(Math.abs(lGaze - 0.5), Math.abs(rGaze - 0.5));
 
   // Head yaw: nose tip vs cheek midpoint
@@ -164,9 +173,12 @@ export function useFocusTracking(alertSensitivitySeconds: number): FocusTracking
 
   // Per-behavior start timestamps (ms) — reset when behavior clears
   const behaviorSince = useRef<Partial<Record<Behavior, number>>>({});
-  const alertActiveRef = useRef(false); // sync ref to avoid stale closure in loop
+  // Consecutive frame counter per behavior — focusState only updates after BEHAVIOR_SUSTAIN_FRAMES
+  const behaviorFrames = useRef<Partial<Record<Behavior, number>>>({});
+  const alertActiveRef = useRef(false);
   const alertDismissedAt = useRef<number | null>(null);
-  const faceDetectedRef = useRef<boolean | null>(null); // previous detection state for change logs
+  const faceDetectedRef = useRef<boolean | null>(null);
+  const prevFocusStateRef = useRef<FocusState>('locked');
 
   const stopTracking = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -175,6 +187,8 @@ export function useFocusTracking(alertSensitivitySeconds: number): FocusTracking
       videoRef.current.srcObject = null;
     }
     behaviorSince.current = {};
+    behaviorFrames.current = {};
+    faceDetectedRef.current = null;
     startingRef.current = false;
     alertActiveRef.current = false;
     setIsTracking(false);
@@ -190,41 +204,52 @@ export function useFocusTracking(alertSensitivitySeconds: number): FocusTracking
 
     const result = landmarker.detectForVideo(video, performance.now());
     const { behaviors, debug } = analyzeFrame(result);
+
+    // Log face detection changes
+    const faceNow = !behaviors.faceAbsent;
+    if (faceNow !== faceDetectedRef.current) {
+      console.log(`[FocusTracking] Person ${faceNow ? 'detected ✅' : 'lost ❌'}`);
+      faceDetectedRef.current = faceNow;
+    }
     console.log('[FocusTracking]', debug);
 
     const now = Date.now();
-    const newActive = new Set<Behavior>();
+    const rawActive = new Set<Behavior>(); // fires this frame
+    const sustainedActive = new Set<Behavior>(); // sustained BEHAVIOR_SUSTAIN_FRAMES frames
 
     for (const beh of BEHAVIOR_PRIORITY) {
       if (behaviors[beh]) {
         if (!behaviorSince.current[beh]) behaviorSince.current[beh] = now;
-        newActive.add(beh);
+        behaviorFrames.current[beh] = (behaviorFrames.current[beh] ?? 0) + 1;
+        rawActive.add(beh);
+        if ((behaviorFrames.current[beh] ?? 0) >= BEHAVIOR_SUSTAIN_FRAMES) {
+          sustainedActive.add(beh);
+        }
       } else {
         delete behaviorSince.current[beh];
+        delete behaviorFrames.current[beh];
       }
     }
 
-    setActiveBehaviors(newActive);
-    setFocusState(behaviorsToFocusState(newActive));
+    setActiveBehaviors(sustainedActive);
+    const newFocusState = behaviorsToFocusState(sustainedActive);
+    setFocusState(newFocusState);
 
-    // Fire alert for the highest-priority active behavior that has exceeded its threshold
+    // Fire alert when focus transitions away from 'locked' (sustained, debounced by BEHAVIOR_SUSTAIN_FRAMES)
     const cooldownActive =
       alertDismissedAt.current !== null && now - alertDismissedAt.current < ALERT_COOLDOWN_MS;
-    if (!alertActiveRef.current && !cooldownActive) {
+    const justWentAway = prevFocusStateRef.current === 'locked' && newFocusState !== 'locked';
+    prevFocusStateRef.current = newFocusState;
+
+    if (!alertActiveRef.current && !cooldownActive && justWentAway) {
+      // Pick the highest-priority sustained behavior for the alert
       for (const beh of BEHAVIOR_PRIORITY) {
-        if (!newActive.has(beh)) continue;
-        const since = behaviorSince.current[beh];
-        if (!since) continue;
-        const elapsed = (now - since) / 1000;
-        const threshold = behaviorThreshold(beh, alertSensitivitySeconds);
-        if (elapsed >= threshold) {
-          console.log(`[FocusTracking] Alert: ${beh} for ${elapsed.toFixed(1)}s`);
+        if (sustainedActive.has(beh)) {
+          console.log(`[FocusTracking] Alert: ${beh} (focus → ${newFocusState})`);
           setAlertBehavior(beh);
           setAlertActive(true);
           alertActiveRef.current = true;
-          if (document.hidden && window.api?.sendFocusAlert) {
-            window.api.sendFocusAlert(beh, Math.round(elapsed));
-          }
+          window.api?.sendFocusAlert(beh);
           break;
         }
       }
