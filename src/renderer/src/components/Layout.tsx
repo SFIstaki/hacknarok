@@ -144,7 +144,7 @@ export default function Layout({
       case 'stats':
         return <Stats t={t} />;
       case 'tips':
-        return <Tips />;
+        return <Tips t={t} />;
       case 'settings':
         return <Settings t={t} />;
       default:
