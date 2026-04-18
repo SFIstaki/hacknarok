@@ -57,11 +57,17 @@ interface ReportsGenerateResponse {
   topApps: Array<{ appName: string; durationMs: number }>;
 }
 
+interface Landmark {
+  x: number;
+  y: number;
+}
+
 interface DashboardApi {
   ingestFocusEvent: (payload: FocusEventInput) => Promise<{ ok: true }>;
   getTodayReport: () => Promise<ReportsTodayResponse>;
   generateReport: (payload?: { dayStartTs?: number }) => Promise<ReportsGenerateResponse>;
   onDashboardUpdate: (listener: (payload: ReportsTodayResponse) => void) => () => void;
+  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<Landmark[]>;
 }
 
 declare global {

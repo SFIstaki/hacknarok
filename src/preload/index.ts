@@ -64,11 +64,17 @@ export interface ReportsGenerateResponse {
   topApps: Array<{ appName: string; durationMs: number }>;
 }
 
+export interface Landmark {
+  x: number;
+  y: number;
+}
+
 export interface DashboardApi {
   ingestFocusEvent: (payload: FocusEventInput) => Promise<{ ok: true }>;
   getTodayReport: () => Promise<ReportsTodayResponse>;
   generateReport: (payload?: { dayStartTs?: number }) => Promise<ReportsGenerateResponse>;
   onDashboardUpdate: (listener: (payload: ReportsTodayResponse) => void) => () => void;
+  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<Landmark[]>;
 }
 
 // Custom APIs for renderer
@@ -76,6 +82,7 @@ const api: DashboardApi = {
   ingestFocusEvent: (payload) => ipcRenderer.invoke('focus:ingest', payload),
   getTodayReport: () => ipcRenderer.invoke('reports:today'),
   generateReport: (payload) => ipcRenderer.invoke('reports:generate', payload),
+  detectFaces: (payload) => ipcRenderer.invoke('headpose:detect', payload),
   onDashboardUpdate: (listener) => {
     const wrappedListener = (_event: IpcRendererEvent, payload: ReportsTodayResponse): void => {
       listener(payload);

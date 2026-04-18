@@ -6,7 +6,7 @@ import icon from '../../resources/icon.png?asset';
 import { FocusService } from './focus/service';
 import { FocusMonitor } from './focus/monitor';
 import { runOpenCVTest } from './opencv-test';
-import { loadHeadPoseModels } from './head-pose/model-loader';
+import { registerHeadPoseHandlers } from './head-pose/ipc-handlers';
 
 let focusService: FocusService | null = null;
 interface PreferencesPayload {
@@ -90,7 +90,7 @@ app
     ipcMain.on('ping', () => console.log('pong'));
 
     runOpenCVTest().catch((err) => console.error('[OpenCV] Test failed:', err));
-    loadHeadPoseModels().catch((err) => console.error('[ONNX] Model load failed:', err));
+    registerHeadPoseHandlers();
 
     const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
     focusService = new FocusService(dbPath);
