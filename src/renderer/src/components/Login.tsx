@@ -66,7 +66,7 @@ export default function Login({
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     if (view === 'login') {
-      if (username === 'Kinga' && password === '123') {
+      if (username === 'kinga' && password === '123') {
         onLogin(username);
       } else {
         setError(t.loginErrorInvalid);
