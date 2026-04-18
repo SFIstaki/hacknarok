@@ -111,7 +111,7 @@ export const translations = {
     statMain2: 'bardziej skupiona',
     statSub: 'w porównaniu do zeszłego tygodnia',
     statBtn: 'sprawdź statystyki',
-    tipText: 'od twojego przyjaciela, SFIstak ✨',
+    tipText: 'od twojego przyjaciela, SFIstaka ✨',
     tipWord: 'wskazówka',
     tipSome: 'Jedna',
     focusStateLabel: 'stan uwagi teraz',
