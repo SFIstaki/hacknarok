@@ -93,6 +93,7 @@ export default function PreferencesForm({
     'Working',
     'Studying',
     'Relax',
+    'Watch a movie',
     'Research',
     'Writing',
     'Other',
@@ -124,10 +125,25 @@ export default function PreferencesForm({
       return;
     }
     setErrors({});
+    // Determine app mode based on usageTypes
+    const usageLower = selectedUsageTypes.map((u) => u.toLowerCase());
+    let mode: 'relax' | 'focus' | undefined = undefined;
+    if (
+      (usageLower.includes('relax') || usageLower.includes('watch a movie')) &&
+      !usageLower.includes('working') &&
+      !usageLower.includes('studying')
+    ) {
+      mode = 'relax';
+    } else if (usageLower.includes('working') || usageLower.includes('studying')) {
+      mode = 'focus';
+    }
+    // Fallback: always set a mode
+    if (!mode) mode = 'focus';
     const preferences = {
       userType: selectedUserType,
       usageTypes: selectedUsageTypes,
       alertSensitivity,
+      mode,
     };
     localStorage.setItem('userPreferences', JSON.stringify(preferences));
     if (onSubmit) onSubmit();
