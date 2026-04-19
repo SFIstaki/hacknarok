@@ -8,7 +8,7 @@
   min-height: 100vh;
   width: 100vw;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding-bottom: 10px;
   background:
@@ -28,8 +28,8 @@
   margin-top: 10px;
   margin-bottom: 10px;
   max-width: 420px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  background: #fff;
+  border-radius: 28px;
   box-shadow: var(--shadow);
   padding: 20px 20px 20px 20px;
   display: flex;
