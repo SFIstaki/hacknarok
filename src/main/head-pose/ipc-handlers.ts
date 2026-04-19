@@ -64,8 +64,13 @@ export function registerHeadPoseHandlers(): void {
       if (detections.length === 0) return null;
 
       // Step 2: refine bbox (shift + square)
-      const { x1, y1, x2, y2 } = refineFace(detections[0], payload.width, payload.height);
-      const squareSize = x2 - x1; // square after refine, so width == height
+      const refined = refineFace(detections[0], payload.width, payload.height);
+      // Rounding and boundary clipping can make w != h by 1px — force a true square
+      const squareSize = Math.min(refined.x2 - refined.x1, refined.y2 - refined.y1);
+      const x1 = refined.x1;
+      const y1 = refined.y1;
+      const x2 = x1 + squareSize;
+      const y2 = y1 + squareSize;
 
       // Step 3: crop face patch
       const cropData = extractCrop(payload.data, payload.width, payload.height, x1, y1, x2, y2);
