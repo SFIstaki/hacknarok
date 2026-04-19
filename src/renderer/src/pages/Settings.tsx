@@ -83,9 +83,11 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
       <div className="settings-container">
         <div className="settings-title-row">
           <h2 className="settings-title">{t.navSettings}</h2>
-          <span className={`settings-saved-flash${savedFlash ? ' visible' : ''}`}>
-            {t.settingsSaved}
-          </span>
+          {savedFlash && (
+            <span className="settings-saved-flash settings-saved-flash-green">
+              {t.settingsSaved}
+            </span>
+          )}
         </div>
         <div className="settings-section">
           <div className="settings-label settings-label-flex">
@@ -120,9 +122,7 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
             </button>
           </div>
         </div>
-        {/* ── Profile ──────────────────────────────────────── */}
         <div className="settings-section">
-          <div className="settings-label">{t.settingsProfileSection}</div>
           <div className="settings-sub-label">{t.preferencesUserType}</div>
           <div className="preferences-pills settings-pills">
             {userTypes.map((type) => (
