@@ -648,7 +648,7 @@
 .mascot-widget {
   position: absolute;
   bottom: 24px;
-  left: 80px;
+  left: 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
