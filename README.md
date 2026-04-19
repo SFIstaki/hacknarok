@@ -22,6 +22,15 @@ $ npm run dev
 
 ### Build
 
+#### For the ONNX models
+```bash
+
+git submodule update --init --recursive
+cd external/head-pose-estimation
+git lfs install
+
+```
+
 ```bash
 # For windows
 $ npm run build:win
@@ -32,3 +41,4 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+
