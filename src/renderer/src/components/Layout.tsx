@@ -1,4 +1,5 @@
 import Tips from '../pages/Tips';
+import About from '../pages/About';
 import CameraPreview from './CameraPreview';
 import { useFocusTracking } from '../hooks/useFocusTracking';
 import '../assets/camera.css';
@@ -69,6 +70,20 @@ const SettingsIcon = (): React.JSX.Element => (
   >
     <circle cx="12" cy="12" r="3" />
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+  </svg>
+);
+const InfoIcon = (): React.JSX.Element => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 );
 const LogoutIcon = (): React.JSX.Element => (
@@ -150,6 +165,7 @@ export default function Layout({
     { id: 'stats', label: t.navStats, Icon: StatsIcon },
     { id: 'tips', label: t.navTips, Icon: TipsIcon },
     { id: 'settings', label: t.navSettings, Icon: SettingsIcon },
+    { id: 'about', label: t.navAbout, Icon: InfoIcon },
   ];
 
   const renderPage = (): React.JSX.Element => {
@@ -162,6 +178,8 @@ export default function Layout({
         return <Tips t={t} />;
       case 'settings':
         return <Settings t={t} />;
+      case 'about':
+        return <About t={t} theme={theme} />;
       default:
         return <Home t={t} onNavigate={setActivePage} theme={theme} />;
     }
@@ -209,12 +227,15 @@ export default function Layout({
         isTracking={isTracking}
         isLoading={isLoading}
         theme={theme}
+        t={t}
       />
 
       <main className="main-content">
         <header className="main-header">
           <div className="header-left">
-            <h1 className="greeting-name">Hello, {username}</h1>
+            <h1 className="greeting-name">
+              {t.greetingHello}, {username}
+            </h1>
             <p className="greeting-sub">{t.greetingSub}</p>
           </div>
           <div className="header-controls">

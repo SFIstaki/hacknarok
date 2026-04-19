@@ -1,5 +1,5 @@
 import type { T } from '../i18n';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface StatsProps {
   t: T;
@@ -55,18 +55,6 @@ const ZOOM_OPTIONS_HOURS = [3, 6, 12, 24] as const;
 
 function scoreToPercent(score: number): number {
   return Math.round(score * 100);
-}
-
-function getStateLabel(state: AttentionState): string {
-  if (state === 'locked') {
-    return 'Locked';
-  }
-
-  if (state === 'fading') {
-    return 'Drifting';
-  }
-
-  return 'Gone';
 }
 
 export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
@@ -491,15 +479,27 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
               <div className="report-grid">
                 <div className="report-block">
                   <div className="report-block-title">{_t.todayLabel || 'Today'}</div>
-                  <div>Locked: {formatDuration(report.stats.lockedMs)}</div>
-                  <div>Fading: {formatDuration(report.stats.fadingMs)}</div>
-                  <div>Gone: {formatDuration(report.stats.goneMs)}</div>
+                  <div>
+                    {_t.focusStateNames.locked}: {formatDuration(report.stats.lockedMs)}
+                  </div>
+                  <div>
+                    {_t.focusStateNames.fading}: {formatDuration(report.stats.fadingMs)}
+                  </div>
+                  <div>
+                    {_t.focusStateNames.gone}: {formatDuration(report.stats.goneMs)}
+                  </div>
                 </div>
                 <div className="report-block">
                   <div className="report-block-title">{_t.yesterdayLabel || 'Yesterday'}</div>
-                  <div>Locked: {formatDuration(report.yesterdayStats.lockedMs)}</div>
-                  <div>Fading: {formatDuration(report.yesterdayStats.fadingMs)}</div>
-                  <div>Gone: {formatDuration(report.yesterdayStats.goneMs)}</div>
+                  <div>
+                    {_t.focusStateNames.locked}: {formatDuration(report.yesterdayStats.lockedMs)}
+                  </div>
+                  <div>
+                    {_t.focusStateNames.fading}: {formatDuration(report.yesterdayStats.fadingMs)}
+                  </div>
+                  <div>
+                    {_t.focusStateNames.gone}: {formatDuration(report.yesterdayStats.goneMs)}
+                  </div>
                 </div>
                 <div className="report-block">
                   <div className="report-block-title">{_t.deltaLabel || 'Delta'}</div>
@@ -666,7 +666,7 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
 
               <div className="attention-insight-row">
                 <span>
-                  Peak:{' '}
+                  {_t.chartPeakLabel}:{' '}
                   <strong>
                     {attentionInsights.peakHour !== null
                       ? `${String(attentionInsights.peakHour).padStart(2, '0')}:00`
@@ -674,19 +674,19 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
                   </strong>
                 </span>
                 <span>
-                  Drifting start:{' '}
+                  {_t.chartDriftingStartLabel}:{' '}
                   <strong>
                     {attentionInsights.driftHour !== null
                       ? `${String(attentionInsights.driftHour).padStart(2, '0')}:00`
-                      : 'not detected'}
+                      : _t.chartNotDetected}
                   </strong>
                 </span>
                 <span>
-                  Current hover:{' '}
+                  {_t.chartCurrentHoverLabel}:{' '}
                   <strong>
                     {hoveredDensePoint
-                      ? `${new Date(hoveredDensePoint.bucketStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${scoreToPercent(hoveredDensePoint.score)}% · ${getStateLabel(hoveredDensePoint.state)}`
-                      : 'move cursor over chart'}
+                      ? `${new Date(hoveredDensePoint.bucketStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${scoreToPercent(hoveredDensePoint.score)}% · ${_t.focusStateNames[hoveredDensePoint.state]}`
+                      : _t.chartMoveCursor}
                   </strong>
                 </span>
               </div>

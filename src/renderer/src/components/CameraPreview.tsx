@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FocusState } from '../i18n';
+import type { FocusState, T } from '../i18n';
 import type { Theme } from '../App';
 
 interface CameraPreviewProps {
@@ -8,6 +8,7 @@ interface CameraPreviewProps {
   isTracking: boolean;
   isLoading: boolean;
   theme: Theme;
+  t: T;
 }
 
 const STATE_BORDER: Record<FocusState, string> = {
@@ -16,18 +17,13 @@ const STATE_BORDER: Record<FocusState, string> = {
   gone: '#e53e3e',
 };
 
-const STATE_LABEL: Record<FocusState, string> = {
-  locked: 'Focused',
-  fading: 'Drifting',
-  gone: 'Away',
-};
-
 export default function CameraPreview({
   videoRef,
   focusState,
   isTracking,
   isLoading,
   theme,
+  t,
 }: CameraPreviewProps): React.JSX.Element {
   const borderColor = isTracking ? STATE_BORDER[focusState] : '#555';
 
@@ -46,7 +42,7 @@ export default function CameraPreview({
 
         {isTracking && (
           <div className="camera-state-badge" style={{ background: borderColor }}>
-            {STATE_LABEL[focusState]}
+            {t.focusStateNames[focusState]}
           </div>
         )}
       </div>

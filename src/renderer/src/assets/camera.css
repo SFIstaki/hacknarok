@@ -1,11 +1,11 @@
 .camera-preview-widget {
   position: fixed;
-  bottom: 24px;
-  left: 100px;
+  bottom: 36px;
+  right: 24px;
   z-index: 100;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 6px;
 }
 

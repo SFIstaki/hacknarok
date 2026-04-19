@@ -13,17 +13,21 @@ function App(): React.JSX.Element {
   const [lang, setLang] = useState<Lang>('en');
   const [showPreferences, setShowPreferences] = useState<boolean>(false);
 
+  const themeToggle = (): void => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  const langToggle = (): void => setLang((l) => (l === 'en' ? 'pl' : 'en'));
+
   if (!username) {
     return (
       <Login
-        onLogin={(name) => {
+        onLogin={(name) => setUsername(name)}
+        onRegister={(name) => {
           setUsername(name);
           setShowPreferences(true);
         }}
         theme={theme}
-        onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        onThemeToggle={themeToggle}
         lang={lang}
-        onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+        onLangToggle={langToggle}
         t={translations[lang]}
       />
     );
@@ -36,9 +40,9 @@ function App(): React.JSX.Element {
         onSubmit={() => setShowPreferences(false)}
         t={translations[lang]}
         theme={theme}
-        onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        onThemeToggle={themeToggle}
         lang={lang}
-        onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+        onLangToggle={langToggle}
       />
     );
   }
@@ -46,14 +50,11 @@ function App(): React.JSX.Element {
   return (
     <Layout
       username={username}
-      onLogout={() => {
-        setUsername(null);
-        setShowPreferences(false);
-      }}
+      onLogout={() => setUsername(null)}
       theme={theme}
-      onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      onThemeToggle={themeToggle}
       lang={lang}
-      onLangToggle={() => setLang((l) => (l === 'en' ? 'pl' : 'en'))}
+      onLangToggle={langToggle}
     />
   );
 }

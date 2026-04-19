@@ -65,6 +65,12 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
     flash();
   };
 
+  const handleSetMode = (newMode: 'relax' | 'focus') => {
+    setMode(newMode);
+    savePrefs({ mode: newMode });
+    flash();
+  };
+
   const userTypes = t.preferencesUserTypes as readonly string[];
   const usageTypeOptions = t.preferencesUsageTypes as readonly string[];
   const alertOptions = t.preferencesAlertSensitivities as readonly {
@@ -72,30 +78,20 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
     value: number;
   }[];
 
-  const handleSetMode = (newMode: 'relax' | 'focus') => {
-    setMode(newMode);
-    savePrefs({ mode: newMode });
-    flash();
-  };
-
   return (
     <div className="page-content settings-page">
       <div className="settings-container">
         <div className="settings-title-row">
           <h2 className="settings-title">{t.navSettings}</h2>
-          {savedFlash && (
-            <span className="settings-saved-flash settings-saved-flash-green">
-              {t.settingsSaved}
-            </span>
-          )}
+          {savedFlash && <span className="settings-saved-flash">{t.settingsSaved}</span>}
         </div>
+
         <div className="settings-section">
-          <div className="settings-label settings-label-flex">
+          <div className="settings-label">
             {t.settingsAppMode}
             <span
               className="settings-help-circle"
               tabIndex={0}
-              title={t.settingsAppModeHelp}
               onClick={() => setShowModeInfo(true)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') setShowModeInfo(true);
@@ -105,26 +101,23 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
               ?
             </span>
           </div>
-          <div className="settings-modes">
-            <button
-              className={`settings-mode-btn${mode === 'relax' ? ' active' : ''}`}
-              onClick={() => handleSetMode('relax')}
-              title={t.settingsModeRelaxDesc}
-            >
-              {t.settingsModeRelax}
-            </button>
-            <button
-              className={`settings-mode-btn${mode === 'focus' ? ' active' : ''}`}
-              onClick={() => handleSetMode('focus')}
-              title={t.settingsModeFocusDesc}
-            >
-              {t.settingsModeFocus}
-            </button>
+          <div className="settings-pills">
+            {(['relax', 'focus'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={mode === m ? 'pill selected' : 'pill'}
+                onClick={() => handleSetMode(m)}
+              >
+                {m === 'relax' ? t.settingsModeRelax : t.settingsModeFocus}
+              </button>
+            ))}
           </div>
         </div>
+
         <div className="settings-section">
           <div className="settings-sub-label">{t.preferencesUserType}</div>
-          <div className="preferences-pills settings-pills">
+          <div className="settings-pills">
             {userTypes.map((type) => (
               <button
                 key={type}
@@ -136,10 +129,9 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
               </button>
             ))}
           </div>
-          <div className="settings-sub-label" style={{ marginTop: 16 }}>
-            {t.preferencesUsageType}
-          </div>
-          <div className="preferences-pills settings-pills">
+
+          <div className="settings-sub-label">{t.preferencesUsageType}</div>
+          <div className="settings-pills">
             {usageTypeOptions.map((type) => (
               <button
                 key={type}
@@ -151,10 +143,9 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
               </button>
             ))}
           </div>
-          <div className="settings-sub-label" style={{ marginTop: 16 }}>
-            {t.preferencesAlertSensitivity}
-          </div>
-          <div className="preferences-pills settings-pills">
+
+          <div className="settings-sub-label">{t.preferencesAlertSensitivity}</div>
+          <div className="settings-pills">
             {alertOptions.map((opt) => (
               <button
                 key={opt.value}
@@ -168,16 +159,17 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
           </div>
         </div>
       </div>
+
       {showModeInfo && (
         <div className="settings-modal-bg" onClick={() => setShowModeInfo(false)}>
           <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
             <div className="settings-modal-title">{t.settingsModesTitle}</div>
             <div className="settings-modal-desc">
-              <span className="settings-modal-label">{t.settingsModeRelax}:</span>{' '}
+              <span className="settings-modal-label">{t.settingsModeRelax}: </span>
               {t.settingsModeRelaxDesc}
             </div>
             <div className="settings-modal-desc">
-              <span className="settings-modal-label">{t.settingsModeFocus}:</span>{' '}
+              <span className="settings-modal-label">{t.settingsModeFocus}: </span>
               {t.settingsModeFocusDesc}
             </div>
             <button className="settings-modal-close-btn" onClick={() => setShowModeInfo(false)}>
@@ -186,7 +178,8 @@ export default function Settings({ t }: SettingsProps): React.JSX.Element {
           </div>
         </div>
       )}
-      <div className="settings-consent">{t.dataProcessingConsent}</div>
+
+      <p className="settings-consent">{t.dataProcessingConsent}</p>
     </div>
   );
 }

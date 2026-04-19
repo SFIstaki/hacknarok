@@ -5,6 +5,7 @@ import '../assets/preferences.css';
 import type { T } from '../i18n';
 
 interface PreferencesFormProps {
+  username?: string;
   onSubmit?: () => void;
   t?: T;
   theme?: 'light' | 'dark';
@@ -75,6 +76,7 @@ const ThemeToggle = ({
 );
 
 export default function PreferencesForm({
+  username,
   onSubmit,
   t,
   theme = 'light',
@@ -123,6 +125,7 @@ export default function PreferencesForm({
     }
     setErrors({});
     const preferences = {
+      username: username ?? '',
       userType: selectedUserType,
       usageTypes: selectedUsageTypes,
       alertSensitivity,

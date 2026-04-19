@@ -6,6 +6,7 @@ type LoginView = 'login' | 'register' | 'about';
 
 interface LoginProps {
   onLogin: (username: string) => void;
+  onRegister: (username: string) => void;
   theme: Theme;
   onThemeToggle: () => void;
   lang: Lang;
@@ -52,6 +53,7 @@ const MoonIcon = (): React.JSX.Element => (
 
 export default function Login({
   onLogin,
+  onRegister,
   theme,
   onThemeToggle,
   lang,
@@ -61,6 +63,7 @@ export default function Login({
   const [view, setView] = useState<LoginView>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent): void => {
@@ -72,7 +75,19 @@ export default function Login({
         setError(t.loginErrorInvalid);
       }
     } else {
-      setError(t.loginErrorRegister);
+      if (!username.trim()) {
+        setError(t.loginErrorInvalid);
+        return;
+      }
+      if (!password) {
+        setError(t.loginErrorInvalid);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError(t.loginErrorPasswordMismatch);
+        return;
+      }
+      onRegister(username.trim());
     }
   };
 
@@ -155,7 +170,13 @@ export default function Login({
               onChange={(e) => setPassword(e.target.value)}
             />
             {view === 'register' && (
-              <input className="login-input" type="password" placeholder={t.loginConfirmPassword} />
+              <input
+                className="login-input"
+                type="password"
+                placeholder={t.loginConfirmPassword}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             )}
             {error && <p className="login-error">{error}</p>}
             <button className="login-btn" type="submit">
