@@ -114,11 +114,9 @@ export default function PreferencesForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { userType?: string; usageTypes?: string } = {};
-    if (!selectedUserType)
-      newErrors.userType = tt.preferencesUserTypeError || 'Please select a user type';
+    if (!selectedUserType) newErrors.userType = 'Please select a user type';
     if (selectedUsageTypes.length === 0)
-      newErrors.usageTypes =
-        tt.preferencesUsageTypeError || 'Please select at least one usage type';
+      newErrors.usageTypes = 'Please select at least one usage type';
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;

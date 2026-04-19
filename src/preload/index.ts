@@ -72,7 +72,10 @@ export interface DashboardApi {
 }
 
 // Custom APIs for renderer
-const api: DashboardApi = {
+const api: DashboardApi & { sendFocusAlert: (behavior: string, lang: string) => void } = {
+  sendFocusAlert: (behavior: string, lang: string): void => {
+    ipcRenderer.send('focus-alert', { behavior, lang });
+  },
   ingestFocusEvent: (payload) => ipcRenderer.invoke('focus:ingest', payload),
   getTodayReport: () => ipcRenderer.invoke('reports:today'),
   generateReport: (payload) => ipcRenderer.invoke('reports:generate', payload),
@@ -80,9 +83,7 @@ const api: DashboardApi = {
     const wrappedListener = (_event: IpcRendererEvent, payload: ReportsTodayResponse): void => {
       listener(payload);
     };
-
     ipcRenderer.on('dashboard:update', wrappedListener);
-
     return () => {
       ipcRenderer.removeListener('dashboard:update', wrappedListener);
     };

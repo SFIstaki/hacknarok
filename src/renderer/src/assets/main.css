@@ -1224,11 +1224,13 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .focus-mix-donut {
-  width: 120px;
-  height: 120px;
+  width: clamp(90px, 18vw, 140px);
+  aspect-ratio: 1;
+  flex-shrink: 0;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -1236,8 +1238,8 @@
 }
 
 .focus-mix-inner {
-  width: 84px;
-  height: 84px;
+  width: 70%;
+  aspect-ratio: 1;
   border-radius: 999px;
   background: var(--bg-card);
   border: 1px solid var(--border);

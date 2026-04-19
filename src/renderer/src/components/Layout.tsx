@@ -1,4 +1,7 @@
 import Tips from '../pages/Tips';
+import CameraPreview from './CameraPreview';
+import { useFocusTracking } from '../hooks/useFocusTracking';
+import '../assets/camera.css';
 const TipsIcon = (): React.JSX.Element => (
   <svg
     viewBox="0 0 24 24"
@@ -11,7 +14,7 @@ const TipsIcon = (): React.JSX.Element => (
     <path d="M9 18h6M10 22h4M12 2a7 7 0 014.9 11.9c-.6.7-1 1.5-1 2.1H8.1c0-.6-.3-1.4-1-2.1A7 7 0 0112 2z" />
   </svg>
 );
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Home from '../pages/Home';
 import Stats from '../pages/Stats';
 import Settings from '../pages/Settings';
@@ -130,6 +133,18 @@ export default function Layout({
   const [activePage, setActivePage] = useState<Page>('home');
   const t = translations[lang];
 
+  const { focusState, isTracking, isLoading, videoRef, startTracking, stopTracking } =
+    useFocusTracking(lang);
+
+  useEffect(() => {
+    startTracking();
+    return () => stopTracking();
+  }, []);
+
+  useEffect(() => {
+    void window.api.ingestFocusEvent({ state: focusState });
+  }, [focusState]);
+
   const navItems: { id: Page; label: string; Icon: () => React.JSX.Element }[] = [
     { id: 'home', label: t.navHome, Icon: HomeIcon },
     { id: 'stats', label: t.navStats, Icon: StatsIcon },
@@ -187,6 +202,14 @@ export default function Layout({
           <span className="nav-tooltip">{t.navLogout}</span>
         </button>
       </nav>
+
+      <CameraPreview
+        videoRef={videoRef}
+        focusState={focusState}
+        isTracking={isTracking}
+        isLoading={isLoading}
+        theme={theme}
+      />
 
       <main className="main-content">
         <header className="main-header">

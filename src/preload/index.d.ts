@@ -67,6 +67,6 @@ interface DashboardApi {
 declare global {
   interface Window {
     electron: ElectronAPI;
-    api: DashboardApi;
+    api: DashboardApi & { sendFocusAlert: (behavior: string, lang: string) => void };
   }
 }

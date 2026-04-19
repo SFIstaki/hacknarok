@@ -1,5 +1,5 @@
 import type { T } from '../i18n';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface StatsProps {
   t: T;
@@ -80,23 +80,28 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
   useEffect(() => {
     let isMounted = true;
 
-    void window.api
-      .getTodayReport()
-      .then((data) => {
-        if (!isMounted) {
-          return;
-        }
+    const fetchToday = (): void => {
+      void window.api
+        .getTodayReport()
+        .then((data) => {
+          if (isMounted) setToday(data);
+        })
+        .catch(() => {
+          if (isMounted) setError('Could not load dashboard data');
+        });
+    };
 
-        setToday(data);
-      })
-      .catch(() => {
-        if (isMounted) {
-          setError('Could not load dashboard data');
-        }
-      });
+    fetchToday();
+    const interval = setInterval(fetchToday, 10_000);
+
+    const unsub = window.api.onDashboardUpdate((data) => {
+      if (isMounted) setToday(data);
+    });
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
+      unsub();
     };
   }, []);
 
