@@ -151,6 +151,10 @@ export default function Layout({
     return () => stopTracking();
   }, []);
 
+  useEffect(() => {
+    void window.api.ingestFocusEvent({ state: focusState });
+  }, [focusState]);
+
   const navItems: { id: Page; label: string; Icon: () => React.JSX.Element }[] = [
     { id: 'home', label: t.navHome, Icon: HomeIcon },
     { id: 'stats', label: t.navStats, Icon: StatsIcon },

@@ -77,6 +77,15 @@ export class FocusService {
     const snapshot = this.db.getDailyReport(dayStartTs);
     const latestSnapshot = this.db.getLatestDailyReportMeta();
 
+    // Compute live from events so stats reflect real-time data even without a snapshot
+    const yesterdayStart = dayStartTs - ONE_DAY_MS;
+    const eventsForDay = this.db.getEventsForRange(dayStartTs, nowTs);
+    const eventsForYesterday = this.db.getEventsForRange(yesterdayStart, dayStartTs);
+    const live =
+      eventsForDay.length > 0
+        ? buildDayReportFromEvents(eventsForDay, eventsForYesterday, dayStartTs, nowTs)
+        : null;
+
     return {
       nowTs,
       currentState: this.currentState,
@@ -88,10 +97,11 @@ export class FocusService {
         latestSnapshotDayStartTs: latestSnapshot?.dayStartTs ?? null,
         latestSnapshotDayEndTs: latestSnapshot?.dayEndTs ?? null,
       },
-      timeline: snapshot?.timeline ?? [],
-      stats: snapshot?.stats ?? { lockedMs: 0, fadingMs: 0, goneMs: 0, totalMs: 0 },
-      delta: snapshot?.delta ?? { todayLockedMs: 0, yesterdayLockedMs: 0, percentChange: null },
-      topApps: snapshot?.topApps ?? [],
+      timeline: live?.timeline ?? snapshot?.timeline ?? [],
+      stats: live?.stats ?? snapshot?.stats ?? { lockedMs: 0, fadingMs: 0, goneMs: 0, totalMs: 0 },
+      delta: live?.delta ??
+        snapshot?.delta ?? { todayLockedMs: 0, yesterdayLockedMs: 0, percentChange: null },
+      topApps: live?.topApps ?? snapshot?.topApps ?? [],
     };
   }
 
