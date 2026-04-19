@@ -3,6 +3,8 @@ import type { T, FocusState } from '../i18n';
 import type { Page } from '../types';
 
 const TIP_INTERVAL_MS = 20_000;
+const INITIAL_STATE_LOADING_MS = 3_000;
+const INITIAL_STATE_LOADING_SESSION_KEY = 'presently.initialStateLoadingShown';
 
 const STATE_COLORS = {
   light: {
@@ -115,7 +117,31 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
   const [tipVisible, setTipVisible] = useState(true);
   const [report, setReport] = useState<DashboardToday>(defaultTodayReport());
   const [isLoading, setIsLoading] = useState(true);
+  const [showStateLoading, setShowStateLoading] = useState<boolean>(() => {
+    try {
+      return window.sessionStorage.getItem(INITIAL_STATE_LOADING_SESSION_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!showStateLoading) {
+      return;
+    }
+
+    const id = setTimeout(() => {
+      setShowStateLoading(false);
+      try {
+        window.sessionStorage.setItem(INITIAL_STATE_LOADING_SESSION_KEY, '1');
+      } catch {
+        // ignore
+      }
+    }, INITIAL_STATE_LOADING_MS);
+
+    return () => clearTimeout(id);
+  }, [showStateLoading]);
 
   useEffect(() => {
     if (tipVisible) return;
@@ -161,7 +187,10 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
     };
   }, []);
 
-  const stateColor = STATE_COLORS[theme][report.currentState];
+  const effectiveState = showStateLoading ? null : report.currentState;
+  const stateColor = effectiveState
+    ? STATE_COLORS[theme][effectiveState]
+    : { bg: 'var(--bg)', text: 'var(--muted)', glow: 'transparent' };
   const focusMinutes = Math.round(report.stats.lockedMs / 60_000);
   const hasSnapshot = report.reportStatus.hasTodaySnapshot;
   const summaryItems = [
@@ -177,7 +206,7 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
         <div className="focus-state-card">
           <p className="focus-state-label">{t.focusStateLabel}</p>
           <p className="focus-state-name" style={{ color: stateColor.text }}>
-            {t.focusStateNames[report.currentState]}
+            {showStateLoading ? 'Loading...' : t.focusStateNames[report.currentState]}
           </p>
           <p className="focus-state-subline">
             {report.currentAppName ?? (t.noActiveApp || 'No active app detected')}
@@ -186,9 +215,9 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
             {(['locked', 'fading', 'gone'] as FocusState[]).map((s) => (
               <span
                 key={s}
-                className={`focus-pill ${s === report.currentState ? 'focus-pill--active' : ''}`}
+                className={`focus-pill ${!showStateLoading && s === report.currentState ? 'focus-pill--active' : ''}`}
                 style={
-                  s === report.currentState
+                  !showStateLoading && s === report.currentState
                     ? {
                         background: stateColor.bg,
                         color: stateColor.text,

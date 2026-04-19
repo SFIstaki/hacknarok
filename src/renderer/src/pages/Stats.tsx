@@ -52,6 +52,8 @@ interface HourlyPoint {
 }
 
 const ZOOM_OPTIONS_HOURS = [3, 6, 12, 24] as const;
+const INITIAL_STATE_LOADING_MS = 3_000;
+const INITIAL_STATE_LOADING_SESSION_KEY = 'presently.initialStateLoadingShown';
 
 function scoreToPercent(score: number): number {
   return Math.round(score * 100);
@@ -74,8 +76,32 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
   const [report, setReport] = useState<GeneratedReport | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showStateLoading, setShowStateLoading] = useState<boolean>(() => {
+    try {
+      return window.sessionStorage.getItem(INITIAL_STATE_LOADING_SESSION_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
   const [zoomHours, setZoomHours] = useState<(typeof ZOOM_OPTIONS_HOURS)[number]>(12);
   const [pan24hPct, setPan24hPct] = useState(0);
+
+  useEffect(() => {
+    if (!showStateLoading) {
+      return;
+    }
+
+    const id = setTimeout(() => {
+      setShowStateLoading(false);
+      try {
+        window.sessionStorage.setItem(INITIAL_STATE_LOADING_SESSION_KEY, '1');
+      } catch {
+        // ignore
+      }
+    }, INITIAL_STATE_LOADING_MS);
+
+    return () => clearTimeout(id);
+  }, [showStateLoading]);
 
   useEffect(() => {
     let isMounted = true;
@@ -373,7 +399,9 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
         <div className="stats-kpi-grid">
           <div className="stats-kpi-card">
             <div className="stats-kpi-label">{_t.currentStateLabel || 'Current state'}</div>
-            <div className="stats-kpi-value">{_t.focusStateNames[today.currentState]}</div>
+            <div className="stats-kpi-value">
+              {showStateLoading ? 'Loading...' : _t.focusStateNames[today.currentState]}
+            </div>
           </div>
 
           <div className="stats-section-card chart-card">
