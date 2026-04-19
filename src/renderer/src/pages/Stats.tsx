@@ -1,5 +1,5 @@
 import type { T } from '../i18n';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface StatsProps {
   t: T;

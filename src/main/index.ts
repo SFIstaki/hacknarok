@@ -253,7 +253,11 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     icon,
-    webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false },
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      backgroundThrottling: false,
+    },
   });
 
   mainWindow.on('ready-to-show', () => {
