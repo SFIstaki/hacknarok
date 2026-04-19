@@ -83,8 +83,8 @@ const api: DashboardApi & {
   dismissNotification: (): void => {
     ipcRenderer.send('notify:dismiss');
   },
-  updateStatusBar: (state: string, labels: Record<string, string>): void => {
-    ipcRenderer.send('status:state-change', { state, labels });
+  updateStatusBar: (state: string, labels: Record<string, string>, theme: string): void => {
+    ipcRenderer.send('status:state-change', { state, labels, theme });
   },
   ingestFocusEvent: (payload) => ipcRenderer.invoke('focus:ingest', payload),
   getTodayReport: () => ipcRenderer.invoke('reports:today'),

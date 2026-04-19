@@ -158,11 +158,32 @@ export default function Layout({
 
   useEffect(() => {
     void window.api.ingestFocusEvent({ state: focusState });
+    window.api.updateStatusBar(
+      focusState,
+      {
+        locked: t.focusStateNames.locked,
+        fading: t.focusStateNames.fading,
+        gone: t.focusStateNames.gone,
+      },
+      theme
+    );
     if (focusState === 'locked') {
       window.api.dismissNotification();
       dismissAlert();
     }
   }, [focusState]);
+
+  useEffect(() => {
+    window.api.updateStatusBar(
+      focusState,
+      {
+        locked: t.focusStateNames.locked,
+        fading: t.focusStateNames.fading,
+        gone: t.focusStateNames.gone,
+      },
+      theme
+    );
+  }, [theme]);
 
   const navItems: { id: Page; label: string; Icon: () => React.JSX.Element }[] = [
     { id: 'home', label: t.navHome, Icon: HomeIcon },

@@ -38,6 +38,7 @@ let focusMonitor: FocusMonitor | null = null;
 
 let mainWindow: BrowserWindow | null = null;
 let notifWindow: BrowserWindow | null = null;
+let statusBarWindow: BrowserWindow | null = null;
 
 // ─── Custom notification window ───────────────────────────────────────────────
 
@@ -268,6 +269,100 @@ function showNotification(behavior: string, lang: Lang = 'en'): void {
   });
 }
 
+function buildStatusBarHtml(): string {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 320px; height: 44px; overflow: hidden; background: transparent; -webkit-app-region: drag; }
+  .bar {
+    width: 320px; height: 44px;
+    background: #2a8ab5;
+    border-radius: 0 0 14px 14px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 0 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    transition: background 0.3s;
+    -webkit-app-region: drag;
+  }
+  .bar.dark {
+    background: #0a1e2c;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+  }
+  .pill {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    font-family: 'Nunito', 'Segoe UI', sans-serif; cursor: default;
+    transition: all 0.3s ease;
+    opacity: 0.45; background: transparent; color: rgba(255,255,255,0.9);
+    -webkit-app-region: no-drag;
+  }
+  .dark .pill { color: rgba(255,255,255,0.7); }
+  .pill.active { opacity: 1; }
+  .pill.locked { background: #d4f0e0; color: #1a6640; }
+  .pill.fading { background: #fde8c8; color: #8a4d0f; }
+  .pill.gone   { background: #fdd8d8; color: #8a1f1f; }
+  .dark .pill.locked { background: rgba(72,187,120,0.2); color: #6ee7a0; }
+  .dark .pill.fading { background: rgba(237,137,54,0.2); color: #fbbf6a; }
+  .dark .pill.gone   { background: rgba(220,80,80,0.2);  color: #fca5a5; }
+</style></head>
+<body>
+<div class="bar" id="bar">
+  <div class="pill locked" id="locked">Locked in</div>
+  <div class="pill fading" id="fading">Fading</div>
+  <div class="pill gone"   id="gone">Gone</div>
+</div>
+<script>
+  const pills = ['locked','fading','gone'];
+  function update(state, labels, theme) {
+    document.getElementById('bar').className = 'bar' + (theme === 'dark' ? ' dark' : '');
+    pills.forEach(s => {
+      const el = document.getElementById(s);
+      el.classList.toggle('active', s === state);
+      if (labels && labels[s]) el.textContent = labels[s];
+    });
+  }
+  window.statusBarApi?.onUpdate(update);
+</script>
+</body></html>`;
+}
+
+function createStatusBar(): void {
+  const { workAreaSize, bounds } = screen.getPrimaryDisplay();
+  const W = 320;
+  const H = 44;
+
+  statusBarWindow = new BrowserWindow({
+    width: W,
+    height: H,
+    x: bounds.x + Math.round((workAreaSize.width - W) / 2),
+    y: bounds.y,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: true,
+    hasShadow: false,
+    focusable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/statusbar.js'),
+      sandbox: false,
+    },
+  });
+
+  statusBarWindow.loadURL(
+    `data:text/html;charset=utf-8,${encodeURIComponent(buildStatusBarHtml())}`
+  );
+
+  statusBarWindow.on('closed', () => {
+    statusBarWindow = null;
+  });
+}
+
+function sendStatusUpdate(state: string, labels: Record<string, string>, theme = 'light'): void {
+  if (statusBarWindow && !statusBarWindow.isDestroyed()) {
+    statusBarWindow.webContents.send('status:update', state, labels, theme);
+  }
+}
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 950,
@@ -318,6 +413,24 @@ app
       }
     });
 
+    ipcMain.on(
+      'status:state-change',
+      (
+        _,
+        { state, labels, theme }: { state: string; labels: Record<string, string>; theme: string }
+      ) => {
+        sendStatusUpdate(state, labels, theme);
+      }
+    );
+
+    ipcMain.on('statusbar-restore', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+
     const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
     focusService = new FocusService(dbPath);
     focusMonitor = new FocusMonitor({
@@ -353,6 +466,7 @@ app
     });
 
     createWindow();
+    createStatusBar();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

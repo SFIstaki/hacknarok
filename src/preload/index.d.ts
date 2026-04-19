@@ -70,6 +70,7 @@ declare global {
     api: DashboardApi & {
       sendFocusAlert: (behavior: string, lang: string) => void;
       dismissNotification: () => void;
+      updateStatusBar: (state: string, labels: Record<string, string>, theme: string) => void;
     };
   }
 }
