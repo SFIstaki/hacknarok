@@ -1,7 +1,40 @@
 import { app, shell, BrowserWindow, ipcMain, screen } from 'electron';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import { FocusService } from './focus/service';
+import { FocusMonitor } from './focus/monitor';
+
+let focusService: FocusService | null = null;
+interface PreferencesPayload {
+  username: string;
+  userType: string;
+  usageTypes: string[];
+  alertSensitivity: number;
+}
+
+function isValidPreferencesPayload(payload: unknown): payload is PreferencesPayload {
+  if (!payload || typeof payload !== 'object') return false;
+
+  const candidate = payload as Partial<PreferencesPayload>;
+  return (
+    typeof candidate.username === 'string' &&
+    candidate.username.trim().length > 0 &&
+    typeof candidate.userType === 'string' &&
+    candidate.userType.trim().length > 0 &&
+    Array.isArray(candidate.usageTypes) &&
+    candidate.usageTypes.length > 0 &&
+    candidate.usageTypes.every((item) => typeof item === 'string' && item.trim().length > 0) &&
+    typeof candidate.alertSensitivity === 'number' &&
+    Number.isFinite(candidate.alertSensitivity)
+  );
+}
+
+function sanitizeFileName(name: string): string {
+  return name.trim().replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+let focusMonitor: FocusMonitor | null = null;
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -244,19 +277,68 @@ function createWindow(): void {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
-app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.electron');
-  app.on('browser-window-created', (_, w) => optimizer.watchWindowShortcuts(w));
+app
+  .whenReady()
+  .then(() => {
+    electronApp.setAppUserModelId('com.electron');
+    app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window));
 
-  ipcMain.on('ping', () => console.log('pong'));
-  ipcMain.on('focus-alert', (_, { behavior }: { behavior: string }) => showNotification(behavior));
+    ipcMain.on('ping', () => console.log('pong'));
+    ipcMain.on('focus-alert', (_, { behavior }: { behavior: string }) =>
+      showNotification(behavior)
+    );
 
-  createWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
+    focusService = new FocusService(dbPath);
+    focusMonitor = new FocusMonitor({
+      sampleIntervalMs: 5000,
+      onClassifiedState: (event) => {
+        focusService?.ingest(event);
+      },
+    });
+    focusMonitor.start();
+
+    ipcMain.removeHandler('preferences:save');
+    ipcMain.handle('preferences:save', async (_, payload: unknown) => {
+      if (!isValidPreferencesPayload(payload)) {
+        throw new Error('Invalid preferences payload');
+      }
+
+      const safeUsername = sanitizeFileName(payload.username);
+      if (!safeUsername) {
+        throw new Error('Invalid username');
+      }
+
+      try {
+        const preferencesDir = join(app.getPath('userData'), 'preferences');
+        await mkdir(preferencesDir, { recursive: true });
+
+        const filePath = join(preferencesDir, `${safeUsername}.json`);
+        await writeFile(filePath, JSON.stringify(payload, null, 2), 'utf-8');
+        return { success: true, filePath };
+      } catch (error) {
+        console.error('Failed to save preferences file:', error);
+        throw error;
+      }
+    });
+
+    createWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  })
+  .catch((error) => {
+    console.error('Main process startup failed:', error);
+    app.quit();
   });
-});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  focusMonitor?.stop();
+  focusMonitor = null;
+  focusService?.shutdown();
+  focusService = null;
 });
