@@ -148,7 +148,7 @@ export default function Layout({
   const [activePage, setActivePage] = useState<Page>('home');
   const t = translations[lang];
 
-  const { focusState, isTracking, isLoading, videoRef, startTracking, stopTracking } =
+  const { focusState, isTracking, isLoading, videoRef, startTracking, stopTracking, dismissAlert } =
     useFocusTracking(lang);
 
   useEffect(() => {
@@ -158,7 +158,10 @@ export default function Layout({
 
   useEffect(() => {
     void window.api.ingestFocusEvent({ state: focusState });
-    if (focusState === 'locked') window.api.dismissNotification();
+    if (focusState === 'locked') {
+      window.api.dismissNotification();
+      dismissAlert();
+    }
   }, [focusState]);
 
   const navItems: { id: Page; label: string; Icon: () => React.JSX.Element }[] = [

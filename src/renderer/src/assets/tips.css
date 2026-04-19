@@ -25,15 +25,11 @@
   color: var(--muted);
 }
 
-/* ── Grid ───────────────────────────────────────────── */
-
 .tips-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
-
-/* ── Card ───────────────────────────────────────────── */
 
 .exercise-card {
   background: var(--bg-card);
@@ -108,8 +104,6 @@
   gap: 12px;
 }
 
-/* ── Ring ───────────────────────────────────────────── */
-
 .exercise-ring-wrap {
   position: relative;
   width: 72px;
@@ -149,8 +143,6 @@
   color: var(--text);
   pointer-events: none;
 }
-
-/* ── Buttons ────────────────────────────────────────── */
 
 .exercise-controls {
   display: flex;

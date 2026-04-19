@@ -75,12 +75,16 @@ export interface DashboardApi {
 const api: DashboardApi & {
   sendFocusAlert: (behavior: string, lang: string) => void;
   dismissNotification: () => void;
+  updateStatusBar: (state: string, labels: Record<string, string>) => void;
 } = {
   sendFocusAlert: (behavior: string, lang: string): void => {
     ipcRenderer.send('focus-alert', { behavior, lang });
   },
   dismissNotification: (): void => {
     ipcRenderer.send('notify:dismiss');
+  },
+  updateStatusBar: (state: string, labels: Record<string, string>): void => {
+    ipcRenderer.send('status:state-change', { state, labels });
   },
   ingestFocusEvent: (payload) => ipcRenderer.invoke('focus:ingest', payload),
   getTodayReport: () => ipcRenderer.invoke('reports:today'),

@@ -10,6 +10,7 @@ export default defineConfig({
         input: {
           index: resolve('src/preload/index.ts'),
           notify: resolve('src/preload/notify.ts'),
+          statusbar: resolve('src/preload/statusbar.ts'),
         },
       },
     },
