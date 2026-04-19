@@ -156,6 +156,17 @@ export const translations = {
     topAppsLockedTitle: 'Top apps (locked)',
     noAppsYet: 'No apps yet',
     attentionSpanByHourTitle: 'Attention span by hour',
+    behaviorAlerts: {
+      faceAbsent: { title: 'Where did you go?', body: "We can't see you. Still at your desk?" },
+      eyesClosed: { title: 'Feeling drowsy?', body: 'Your eyes have been closed for a while.' },
+      yawning: { title: 'Big yawn!', body: 'Take a short break or grab some water.' },
+      lookingAway: { title: 'Eyes drifting...', body: 'Your gaze wandered from the screen.' },
+      headTurned: { title: 'Head turned away', body: 'You seem to be looking elsewhere.' },
+      appRunning: {
+        title: 'Presently is running',
+        body: 'Focus tracking is active. Stay in the zone!',
+      },
+    },
   },
   pl: {
     preferencesTitle: 'Powiedz nam o sobie',
@@ -307,6 +318,17 @@ export const translations = {
     topAppsLockedTitle: 'Top aplikacje (skupienie)',
     noAppsYet: 'Brak aplikacji',
     attentionSpanByHourTitle: 'Skupienie wg godziny',
+    behaviorAlerts: {
+      faceAbsent: { title: 'Gdzie jesteś?', body: 'Nie widzimy cię. Wciąż przy biurku?' },
+      eyesClosed: { title: 'Senność?', body: 'Twoje oczy były zamknięte przez chwilę.' },
+      yawning: { title: 'Wielkie ziewnięcie!', body: 'Zrób krótką przerwę lub napij się wody.' },
+      lookingAway: { title: 'Odpływasz...', body: 'Twój wzrok uciekł od ekranu.' },
+      headTurned: { title: 'Głowa odwrócona', body: 'Wyglądasz, jakbyś patrzył gdzie indziej.' },
+      appRunning: {
+        title: 'Presently działa',
+        body: 'Śledzenie skupienia jest aktywne. Trzymaj się!',
+      },
+    },
   },
 } as const;
 

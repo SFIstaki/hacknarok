@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { FaceLandmarkerResult } from '@mediapipe/tasks-vision';
-import type { FocusState } from '../i18n';
+import type { FocusState, Lang } from '../i18n';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -193,7 +193,7 @@ function behaviorsToFocusState(active: Set<Behavior>): FocusState {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFocusTracking(): FocusTrackingResult {
+export function useFocusTracking(lang: Lang = 'en'): FocusTrackingResult {
   const [focusState, setFocusState] = useState<FocusState>('locked');
   const [activeBehaviors, setActiveBehaviors] = useState<Set<Behavior>>(new Set());
   const [alertActive, setAlertActive] = useState(false);
@@ -288,7 +288,7 @@ export function useFocusTracking(): FocusTrackingResult {
           setAlertActive(true);
           alertActiveRef.current = true;
           goneSinceRef.current = null; // require a fresh 3s gone period for the next alert
-          window.api?.sendFocusAlert(beh);
+          window.api?.sendFocusAlert(beh, lang);
           break;
         }
       }

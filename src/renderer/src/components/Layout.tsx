@@ -1,6 +1,5 @@
 import Tips from '../pages/Tips';
 import CameraPreview from './CameraPreview';
-import FocusAlert from './FocusAlert';
 import { useFocusTracking } from '../hooks/useFocusTracking';
 import '../assets/camera.css';
 const TipsIcon = (): React.JSX.Element => (
@@ -134,17 +133,8 @@ export default function Layout({
   const [activePage, setActivePage] = useState<Page>('home');
   const t = translations[lang];
 
-  const {
-    focusState,
-    isTracking,
-    isLoading,
-    alertActive,
-    alertBehavior,
-    videoRef,
-    startTracking,
-    stopTracking,
-    dismissAlert,
-  } = useFocusTracking();
+  const { focusState, isTracking, isLoading, videoRef, startTracking, stopTracking } =
+    useFocusTracking(lang);
 
   useEffect(() => {
     startTracking();
@@ -218,12 +208,6 @@ export default function Layout({
         focusState={focusState}
         isTracking={isTracking}
         isLoading={isLoading}
-        theme={theme}
-      />
-      <FocusAlert
-        alertActive={alertActive}
-        alertBehavior={alertBehavior}
-        onDismiss={dismissAlert}
         theme={theme}
       />
 

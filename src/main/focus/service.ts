@@ -60,7 +60,10 @@ export class FocusService {
 
     this.db.insertEvent(event.ts, event.state, event.appName, event.windowTitle);
 
+    const stateChanged = event.state !== this.currentState;
     this.updateCurrent(event);
+
+    if (stateChanged) this.broadcastDashboardUpdate();
 
     return { ok: true };
   }

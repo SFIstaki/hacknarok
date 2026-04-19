@@ -72,9 +72,9 @@ export interface DashboardApi {
 }
 
 // Custom APIs for renderer
-const api: DashboardApi & { sendFocusAlert: (behavior: string) => void } = {
-  sendFocusAlert: (behavior: string): void => {
-    ipcRenderer.send('focus-alert', { behavior });
+const api: DashboardApi & { sendFocusAlert: (behavior: string, lang: string) => void } = {
+  sendFocusAlert: (behavior: string, lang: string): void => {
+    ipcRenderer.send('focus-alert', { behavior, lang });
   },
   ingestFocusEvent: (payload) => ipcRenderer.invoke('focus:ingest', payload),
   getTodayReport: () => ipcRenderer.invoke('reports:today'),

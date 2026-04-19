@@ -40,38 +40,50 @@ let mainWindow: BrowserWindow | null = null;
 
 // ─── Custom notification window ───────────────────────────────────────────────
 
-const BEHAVIOR_CONTENT: Record<string, { title: string; body: string; accent: string }> = {
-  faceAbsent: {
-    title: 'Where did you go?',
-    body: "We can't see you. Still at your desk?",
-    accent: '#e53e3e',
+type Lang = 'en' | 'pl';
+
+const BEHAVIOR_ACCENT: Record<string, string> = {
+  faceAbsent: '#e53e3e',
+  eyesClosed: '#805ad5',
+  yawning: '#d69e2e',
+  lookingAway: '#ed8936',
+  headTurned: '#3182ce',
+  appRunning: '#5dbae0',
+};
+
+const BEHAVIOR_TEXT: Record<Lang, Record<string, { title: string; body: string }>> = {
+  en: {
+    faceAbsent: { title: 'Where did you go?', body: "We can't see you. Still at your desk?" },
+    eyesClosed: { title: 'Feeling drowsy?', body: 'Your eyes have been closed for a while.' },
+    yawning: { title: 'Big yawn!', body: 'Take a short break or grab some water.' },
+    lookingAway: { title: 'Eyes drifting...', body: 'Your gaze wandered from the screen.' },
+    headTurned: { title: 'Head turned away', body: 'You seem to be looking elsewhere.' },
+    appRunning: {
+      title: 'Presently is running',
+      body: 'Focus tracking is active. Stay in the zone!',
+    },
   },
-  eyesClosed: {
-    title: 'Feeling drowsy?',
-    body: 'Your eyes have been closed for a while.',
-    accent: '#805ad5',
-  },
-  yawning: {
-    title: 'Big yawn!',
-    body: 'Take a short break or grab some water.',
-    accent: '#d69e2e',
-  },
-  lookingAway: {
-    title: 'Eyes drifting...',
-    body: 'Your gaze wandered from the screen.',
-    accent: '#ed8936',
-  },
-  headTurned: {
-    title: 'Head turned away',
-    body: 'You seem to be looking elsewhere.',
-    accent: '#3182ce',
-  },
-  test: {
-    title: 'Test notification',
-    body: 'Presently notifications are working!',
-    accent: '#5dbae0',
+  pl: {
+    faceAbsent: { title: 'Gdzie jesteś?', body: 'Nie widzimy cię. Wciąż przy biurku?' },
+    eyesClosed: { title: 'Senność?', body: 'Twoje oczy były zamknięte przez chwilę.' },
+    yawning: { title: 'Wielkie ziewnięcie!', body: 'Zrób krótką przerwę lub napij się wody.' },
+    lookingAway: { title: 'Odpływasz...', body: 'Twój wzrok uciekł od ekranu.' },
+    headTurned: { title: 'Głowa odwrócona', body: 'Wyglądasz, jakbyś patrzył gdzie indziej.' },
+    appRunning: {
+      title: 'Presently działa',
+      body: 'Śledzenie skupienia jest aktywne. Trzymaj się!',
+    },
   },
 };
+
+function getBehaviorContent(
+  behavior: string,
+  lang: Lang
+): { title: string; body: string; accent: string } {
+  const text = (BEHAVIOR_TEXT[lang] ?? BEHAVIOR_TEXT.en)[behavior] ?? BEHAVIOR_TEXT.en.appRunning;
+  const accent = BEHAVIOR_ACCENT[behavior] ?? BEHAVIOR_ACCENT.appRunning;
+  return { ...text, accent };
+}
 
 // ─── SFIstak mascot SVG variants ──────────────────────────────────────────────
 
@@ -147,16 +159,16 @@ const MASCOT_VARIANTS: Record<string, string[]> = {
   yawning: [mk(eHalf, mYawn), mk(eClosed, mYawn), mk(eHalf, mYawn, xStar)],
   lookingAway: [mk(eRight, mFlat), mk(eLeft, mFlat), mk(eRight, mWorry, xSweat)],
   headTurned: [mk(eLeft, mWorry), mk(eRight, mFlat, xPhone), mk(eLeft, mFlat, xSweat)],
-  test: [mk(eOpen, mSmile, xWave), mk(eWide, mSmile), mk(eOpen, mSmile, xStar)],
+  appRunning: [mk(eOpen, mSmile, xWave), mk(eWide, mSmile), mk(eOpen, mSmile, xStar)],
 };
 
 function pickMascot(behavior: string): string {
-  const variants = MASCOT_VARIANTS[behavior] ?? MASCOT_VARIANTS.test;
+  const variants = MASCOT_VARIANTS[behavior] ?? MASCOT_VARIANTS.appRunning;
   return variants[Math.floor(Math.random() * variants.length)];
 }
 
-function buildNotificationHtml(behavior: string): string {
-  const c = BEHAVIOR_CONTENT[behavior] ?? BEHAVIOR_CONTENT.test;
+function buildNotificationHtml(behavior: string, lang: Lang = 'en'): string {
+  const c = getBehaviorContent(behavior, lang);
   const mascot = pickMascot(behavior);
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -206,7 +218,7 @@ function buildNotificationHtml(behavior: string): string {
   </body></html>`;
 }
 
-function showNotification(behavior: string): void {
+function showNotification(behavior: string, lang: Lang = 'en'): void {
   const { workAreaSize, bounds } = screen.getPrimaryDisplay();
   const W = 360;
   const H = 92;
@@ -230,7 +242,7 @@ function showNotification(behavior: string): void {
   });
 
   win.loadURL(
-    `data:text/html;charset=utf-8,${encodeURIComponent(buildNotificationHtml(behavior))}`
+    `data:text/html;charset=utf-8,${encodeURIComponent(buildNotificationHtml(behavior, lang))}`
   );
 
   // Restore main window when toast body is clicked (via IPC from preload)
@@ -263,8 +275,7 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow!.setIcon(icon);
     mainWindow!.show();
-    // Unconditional test notification 5s after launch
-    setTimeout(() => showNotification('test'), 5_000);
+    setTimeout(() => showNotification('appRunning'), 5_000);
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -288,8 +299,8 @@ app
     app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window));
 
     ipcMain.on('ping', () => console.log('pong'));
-    ipcMain.on('focus-alert', (_, { behavior }: { behavior: string }) =>
-      showNotification(behavior)
+    ipcMain.on('focus-alert', (_, { behavior, lang }: { behavior: string; lang?: Lang }) =>
+      showNotification(behavior, lang ?? 'en')
     );
 
     const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
