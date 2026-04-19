@@ -37,6 +37,7 @@ function sanitizeFileName(name: string): string {
 let focusMonitor: FocusMonitor | null = null;
 
 let mainWindow: BrowserWindow | null = null;
+let notifWindow: BrowserWindow | null = null;
 
 // ─── Custom notification window ───────────────────────────────────────────────
 
@@ -219,12 +220,17 @@ function buildNotificationHtml(behavior: string, lang: Lang = 'en'): string {
 }
 
 function showNotification(behavior: string, lang: Lang = 'en'): void {
+  if (notifWindow && !notifWindow.isDestroyed()) {
+    notifWindow.close();
+    notifWindow = null;
+  }
+
   const { workAreaSize, bounds } = screen.getPrimaryDisplay();
   const W = 360;
   const H = 92;
   const PAD = 16;
 
-  const win = new BrowserWindow({
+  notifWindow = new BrowserWindow({
     width: W,
     height: H,
     x: bounds.x + workAreaSize.width - W - PAD,
@@ -239,6 +245,12 @@ function showNotification(behavior: string, lang: Lang = 'en'): void {
       preload: join(__dirname, '../preload/notify.js'),
       sandbox: false,
     },
+  });
+
+  const win = notifWindow;
+
+  win.on('closed', () => {
+    if (notifWindow === win) notifWindow = null;
   });
 
   win.loadURL(
@@ -302,6 +314,13 @@ app
     ipcMain.on('focus-alert', (_, { behavior, lang }: { behavior: string; lang?: Lang }) =>
       showNotification(behavior, lang ?? 'en')
     );
+
+    ipcMain.on('notify:dismiss', () => {
+      if (notifWindow && !notifWindow.isDestroyed()) {
+        notifWindow.close();
+        notifWindow = null;
+      }
+    });
 
     const dbPath = process.env.FOCUS_DB_PATH || join(app.getPath('userData'), 'focus-monitor.db');
     focusService = new FocusService(dbPath);

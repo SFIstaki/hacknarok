@@ -1,9 +1,24 @@
-import type { T } from '../i18n';
+import type { T, FocusState } from '../i18n';
+import type { Theme } from '../App';
 import { useEffect, useMemo, useState } from 'react';
 
 interface StatsProps {
   t: T;
+  theme: Theme;
 }
+
+const STATE_COLORS = {
+  light: {
+    locked: { bg: '#d4f0e0', text: '#1a6640', glow: 'rgba(72,187,120,0.25)' },
+    fading: { bg: '#fde8c8', text: '#8a4d0f', glow: 'rgba(237,137,54,0.25)' },
+    gone: { bg: '#fdd8d8', text: '#8a1f1f', glow: 'rgba(220,80,80,0.25)' },
+  },
+  dark: {
+    locked: { bg: 'rgba(72,187,120,0.18)', text: '#6ee7a0', glow: 'rgba(72,187,120,0.2)' },
+    fading: { bg: 'rgba(237,137,54,0.18)', text: '#fbbf6a', glow: 'rgba(237,137,54,0.2)' },
+    gone: { bg: 'rgba(220,80,80,0.18)', text: '#fca5a5', glow: 'rgba(220,80,80,0.2)' },
+  },
+} satisfies Record<string, Record<FocusState, { bg: string; text: string; glow: string }>>;
 
 type DashboardToday = Awaited<ReturnType<typeof window.api.getTodayReport>>;
 type GeneratedReport = Awaited<ReturnType<typeof window.api.generateReport>>;
@@ -13,12 +28,6 @@ const STATE_SCORE: Record<AttentionState, number> = {
   locked: 1,
   fading: 0.55,
   gone: 0.15,
-};
-
-const STATE_COLORS: Record<AttentionState, string> = {
-  locked: '#8cdcb4',
-  fading: '#F5C28A',
-  gone: '#F09090',
 };
 
 function formatDuration(ms: number): string {
@@ -57,7 +66,7 @@ function scoreToPercent(score: number): number {
   return Math.round(score * 100);
 }
 
-export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
+export default function Stats({ t: _t, theme }: StatsProps): React.JSX.Element {
   const [today, setToday] = useState<DashboardToday | null>(null);
   const [report, setReport] = useState<GeneratedReport | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -337,11 +346,7 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
     <div className="page-content stats-page">
       <div className="stats-header-row">
         <h2 className="stats-title">{_t.statsTitle || 'Dashboard summary & report'}</h2>
-        <button
-          className="stats-generate-btn"
-          onClick={() => void generateReport()}
-          disabled={isGenerating}
-        >
+        <button className="stats-btn" onClick={() => void generateReport()} disabled={isGenerating}>
           {isGenerating
             ? _t.generating || 'Generating…'
             : _t.generateTodayReport || 'Generate today report'}
@@ -350,9 +355,38 @@ export default function Stats({ t: _t }: StatsProps): React.JSX.Element {
 
       {today && (
         <div className="stats-kpi-grid">
-          <div className="stats-kpi-card">
-            <div className="stats-kpi-label">{_t.currentStateLabel || 'Current state'}</div>
-            <div className="stats-kpi-value">{_t.focusStateNames[today.currentState]}</div>
+          <div className="focus-state-card stats-focus-state-card">
+            {(() => {
+              const stateColor = STATE_COLORS[theme][today.currentState];
+              return (
+                <>
+                  <p className="focus-state-label">{_t.focusStateLabel}</p>
+                  <p className="focus-state-name" style={{ color: stateColor.text }}>
+                    {_t.focusStateNames[today.currentState]}
+                  </p>
+                  <p className="focus-state-subline">{today.currentAppName ?? _t.noActiveApp}</p>
+                  <div className="focus-state-pills">
+                    {(['locked', 'fading', 'gone'] as FocusState[]).map((s) => (
+                      <span
+                        key={s}
+                        className={`focus-pill ${s === today.currentState ? 'focus-pill--active' : ''}`}
+                        style={
+                          s === today.currentState
+                            ? {
+                                background: stateColor.bg,
+                                color: stateColor.text,
+                                boxShadow: `0 0 0 4px ${stateColor.glow}`,
+                              }
+                            : {}
+                        }
+                      >
+                        {_t.focusStateNames[s]}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           <div className="stats-section-card chart-card">

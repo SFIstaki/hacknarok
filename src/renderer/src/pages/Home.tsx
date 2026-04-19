@@ -111,7 +111,18 @@ interface HomeProps {
   theme: Theme;
 }
 
+function randomTipIndex(tips: readonly string[], exclude: number): number {
+  if (tips.length <= 1) return 0;
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * tips.length);
+  } while (idx === exclude);
+  return idx;
+}
+
 export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Element {
+  const tips = t.sfistakTips as readonly string[];
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * tips.length));
   const [tipVisible, setTipVisible] = useState(true);
   const [report, setReport] = useState<DashboardToday>(defaultTodayReport());
   const [isLoading, setIsLoading] = useState(true);
@@ -119,9 +130,12 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
 
   useEffect(() => {
     if (tipVisible) return;
-    const id = setTimeout(() => setTipVisible(true), TIP_INTERVAL_MS);
+    const id = setTimeout(() => {
+      setTipIndex((prev) => randomTipIndex(tips, prev));
+      setTipVisible(true);
+    }, TIP_INTERVAL_MS);
     return () => clearTimeout(id);
-  }, [tipVisible]);
+  }, [tipVisible, tips]);
 
   useEffect(() => {
     let isMounted = true;
@@ -265,10 +279,18 @@ export default function Home({ t, onNavigate, theme }: HomeProps): React.JSX.Ele
         </div>
       )}
 
+      <div className="about-teaser-tile">
+        <p className="about-teaser-title">{t.exploreAboutTitle}</p>
+        <p className="about-teaser-body">{t.exploreAboutBody}</p>
+        <button className="stats-btn about-teaser-btn" onClick={() => onNavigate('about')}>
+          {t.exploreAboutCta}
+        </button>
+      </div>
+
       <div className="mascot-widget">
         <div className={`mascot-bubble ${tipVisible ? 'mascot-bubble--visible' : ''}`}>
           <p>
-            {t.tipSome} <span className="tips-highlight">{t.tipWord}</span> {t.tipText}
+            <span className="tips-highlight">{t.tipWord}:</span> {tips[tipIndex]}
           </p>
           <div className="bubble-tail" />
         </div>

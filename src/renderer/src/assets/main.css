@@ -269,6 +269,17 @@
   transform: scale(0.98);
 }
 
+.login-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 .app-shell {
   display: flex;
   width: 100vw;
@@ -645,6 +656,40 @@
   background: rgba(93, 186, 224, 0.15);
 }
 
+.about-teaser-tile {
+  position: absolute;
+  bottom: 24px;
+  left: 340px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 300px;
+  height: 165px;
+  justify-content: center;
+  text-align: center;
+}
+
+.about-teaser-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.about-teaser-body {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.about-teaser-btn {
+  align-self: center;
+  margin-top: 2px;
+}
+
 .mascot-widget {
   position: absolute;
   bottom: 24px;
@@ -772,9 +817,9 @@
 }
 
 .focus-state-card {
-  flex: 1 1 190px;
-  min-width: 170px;
-  max-width: 230px;
+  flex: 1 1 210px;
+  min-width: 190px;
+  max-width: 265px;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 22px 24px 20px;
@@ -783,6 +828,11 @@
   flex-direction: column;
   gap: 10px;
   transition: background 0.3s;
+}
+
+.stats-focus-state-card {
+  max-width: none;
+  width: 100%;
 }
 
 .focus-state-label {
@@ -814,7 +864,7 @@
 }
 
 .focus-pill {
-  padding: 7px 0;
+  padding: 7px 6px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
@@ -826,6 +876,7 @@
     color 0.2s,
     box-shadow 0.2s;
   flex: 1;
+  min-width: 0;
   word-break: break-word;
   hyphens: auto;
 }

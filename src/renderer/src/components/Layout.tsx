@@ -158,6 +158,7 @@ export default function Layout({
 
   useEffect(() => {
     void window.api.ingestFocusEvent({ state: focusState });
+    if (focusState === 'locked') window.api.dismissNotification();
   }, [focusState]);
 
   const navItems: { id: Page; label: string; Icon: () => React.JSX.Element }[] = [
@@ -173,7 +174,7 @@ export default function Layout({
       case 'home':
         return <Home t={t} onNavigate={setActivePage} theme={theme} />;
       case 'stats':
-        return <Stats t={t} />;
+        return <Stats t={t} theme={theme} />;
       case 'tips':
         return <Tips t={t} />;
       case 'settings':
