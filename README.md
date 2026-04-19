@@ -83,7 +83,7 @@ $ npm install
 $ npm run dev
 ```
 
-Beware, you may need to create an .env file with
+Beware, to run app yourself properly, you may need to create an .env.local file with
 ```
 VITE_SUPABASE_URL=https://tsjhqkgkbjwazyafaprc.supabase.co/
 VITE_SUPABASE_ANON_KEY=<key>
