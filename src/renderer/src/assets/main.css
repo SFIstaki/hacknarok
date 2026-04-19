@@ -662,7 +662,7 @@
 .about-teaser-tile {
   position: absolute;
   bottom: 24px;
-  left: 340px;
+  left: 290px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);

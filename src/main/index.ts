@@ -268,11 +268,9 @@ function showNotification(behavior: string, lang: Lang = 'en'): void {
   });
 }
 
-// ─── Main window ──────────────────────────────────────────────────────────────
-
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 900,
+    width: 950,
     height: 670,
     show: false,
     autoHideMenuBar: true,
@@ -301,8 +299,6 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 }
-
-// ─── App lifecycle ────────────────────────────────────────────────────────────
 
 app
   .whenReady()
