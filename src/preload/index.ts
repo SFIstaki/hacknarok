@@ -64,9 +64,9 @@ export interface ReportsGenerateResponse {
   topApps: Array<{ appName: string; durationMs: number }>;
 }
 
-export interface Landmark {
-  x: number;
-  y: number;
+export interface PoseResult {
+  lineStart: { x: number; y: number };
+  lineEnd: { x: number; y: number };
 }
 
 export interface DashboardApi {
@@ -74,7 +74,7 @@ export interface DashboardApi {
   getTodayReport: () => Promise<ReportsTodayResponse>;
   generateReport: (payload?: { dayStartTs?: number }) => Promise<ReportsGenerateResponse>;
   onDashboardUpdate: (listener: (payload: ReportsTodayResponse) => void) => () => void;
-  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<Landmark[]>;
+  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<PoseResult | null>;
 }
 
 // Custom APIs for renderer

@@ -39,7 +39,7 @@ export default function Camera(): React.JSX.Element {
             const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
             const rgba = new Uint8Array(imageData.data.buffer);
 
-            const landmarks = await window.api.detectFaces({
+            const pose = await window.api.detectFaces({
               data: rgba,
               width: videoWidth,
               height: videoHeight,
@@ -47,11 +47,14 @@ export default function Camera(): React.JSX.Element {
 
             const octx = overlay.getContext('2d')!;
             octx.clearRect(0, 0, videoWidth, videoHeight);
-            octx.fillStyle = '#00ff00';
-            for (const pt of landmarks) {
+            if (pose) {
               octx.beginPath();
-              octx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
-              octx.fill();
+              octx.moveTo(pose.lineStart.x, pose.lineStart.y);
+              octx.lineTo(pose.lineEnd.x, pose.lineEnd.y);
+              octx.strokeStyle = '#00ff00';
+              octx.lineWidth = 3;
+              octx.lineCap = 'round';
+              octx.stroke();
             }
           } catch {
             // skip frame on inference error

@@ -57,9 +57,9 @@ interface ReportsGenerateResponse {
   topApps: Array<{ appName: string; durationMs: number }>;
 }
 
-interface Landmark {
-  x: number;
-  y: number;
+interface PoseResult {
+  lineStart: { x: number; y: number };
+  lineEnd: { x: number; y: number };
 }
 
 interface DashboardApi {
@@ -67,7 +67,7 @@ interface DashboardApi {
   getTodayReport: () => Promise<ReportsTodayResponse>;
   generateReport: (payload?: { dayStartTs?: number }) => Promise<ReportsGenerateResponse>;
   onDashboardUpdate: (listener: (payload: ReportsTodayResponse) => void) => () => void;
-  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<Landmark[]>;
+  detectFaces: (payload: { data: Uint8Array; width: number; height: number }) => Promise<PoseResult | null>;
 }
 
 declare global {
