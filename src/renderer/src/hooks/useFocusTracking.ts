@@ -42,9 +42,9 @@ export type Behavior = 'lookingAway' | 'headTurned' | 'eyesClosed' | 'yawning' |
 const BEHAVIOR_PRIORITY: Behavior[] = [
   'faceAbsent',
   'eyesClosed',
+  'headTurned',
   'yawning',
   'lookingAway',
-  'headTurned',
 ];
 
 export interface FocusTrackingResult {
@@ -133,9 +133,9 @@ function analyzeFrame(result: FaceLandmarkerResult): FrameResult {
 }
 
 function behaviorsToFocusState(active: Set<Behavior>): FocusState {
-  if (active.has('faceAbsent') || active.has('eyesClosed')) return 'gone';
-  if (active.has('yawning') || active.has('lookingAway') || active.has('headTurned'))
-    return 'fading';
+  if (active.has('faceAbsent') || active.has('eyesClosed') || active.has('headTurned'))
+    return 'gone';
+  if (active.has('yawning') || active.has('lookingAway')) return 'fading';
   return 'locked';
 }
 
